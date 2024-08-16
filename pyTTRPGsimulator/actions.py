@@ -105,50 +105,53 @@ class Attack(Action):
     ):
         super().__init__(action_points_cost, mana_points_cost, stamina_points_cost)
 
-    def execute(self, source: "Actor", targets: "Actor"):
+    def execute(self, source: "Actor", targets: List["Actor"]):
         if not self._apply_costs(source):
             return
 
         source.attack_count += 1
-        # Additional disadvantage for subsequent attacks
-        disadvantage_count = source.attack_count - 1
-        # Advantage count from GainAdvantage actions
         advantage_count = source.advantage_count
 
-        # Determine number of dice rolls based on advantage and disadvantage
-        rolls = [
-            random.randint(1, 20)
-            for _ in range(max(disadvantage_count + 1 - advantage_count, 1))
-        ]
-        if advantage_count > disadvantage_count:
-            attack_roll = max(rolls)  # Use the highest roll due to advantage
-            advantage_count = 0
-        else:
-            attack_roll = min(rolls)  # Use the lowest roll due to disadvantage
-
-        attack_tot = (
-            attack_roll
-            + source.Might
-            + source.combat_mastery
-            + source.one_time_hit_bonus
-        )
-        is_natural_20 = attack_roll == 20
-
-        # Remove any one time hit bonus
-        source.one_time_hit_bonus = 0
-
-        # Only one roll was made for all targets
         for target in targets:
-            # TODO: improve this with a weapon inventory system
+            # Determine disadvantage based on dodging or full dodging status
+            disadvantage_count = source.attack_count - 1
+            if target.is_full_dodging or target.is_dodging:
+                disadvantage_count += 1
+                # Then remove "simple" dodging
+                target.is_dodging = False
+
+            # Determine the number of dice rolls based on advantage and disadvantage
+            # Here, contrary to previous versions, each target gets its own attack roll
+            rolls = [
+                random.randint(1, 20)
+                for _ in range(max(disadvantage_count + 1 - advantage_count, 1))
+            ]
+
+            if advantage_count > disadvantage_count:
+                attack_roll = max(rolls)  # Use the highest roll due to advantage
+                advantage_count = 0  # Reset advantage count after use
+            else:
+                attack_roll = min(rolls)  # Use the lowest roll due to disadvantage
+
+            attack_tot = (
+                attack_roll
+                + source.prime_modifier
+                + source.combat_mastery
+                + source.one_time_hit_bonus
+            )
+            is_natural_20 = attack_roll == 20
+
+            # Remove any one-time hit bonus after it's used
+            source.one_time_hit_bonus = 0
+
+            # Apply weapon styles and calculate total attack roll for the target
+            # Assumes the actor uses the first weapon in their inventory
             weapon = source.weapons[0]
             bonus_dmg_ws, bonus_hit_ws = weapon.apply_styles(target)
-
             attack_tot_target = attack_tot + bonus_hit_ws
 
             if attack_tot_target >= target.physical_defense or is_natural_20:
-                damage_bonus = int(
-                    (attack_tot_target - target.physical_defense) // 5
-                )  # The "by-5 rule"
+                damage_bonus = int((attack_tot_target - target.physical_defense) // 5)
                 if is_natural_20:
                     damage_bonus += 2
 
@@ -285,10 +288,6 @@ class Disengage(Action):
 class Dodge(Action):
     """
     Action to dodge.
-
-    Not fully implemented and integrated with the rest of the code.
-
-    TODO : re-read the rules on dodge and implement
     """
 
     def __init__(
@@ -304,7 +303,30 @@ class Dodge(Action):
         if not self._apply_costs(source):
             return
 
-        logger.info(f"{source.name} prepares to dodge")
+        target.is_dodging = True
+        logger.info(f"{source.name} prepares to dodge the next attack.")
+
+
+class Full_Dodge(Action):
+    """
+    Action to full dodge.
+    """
+
+    def __init__(
+        self,
+        action_points_cost: int = 2,
+        mana_points_cost: int = 0,
+        stamina_points_cost: int = 0,
+    ):
+        super().__init__(action_points_cost, mana_points_cost, stamina_points_cost)
+
+    def execute(self, source: "Actor", target: Optional["Actor"] = None):
+        target = source if target is None else target
+        if not self._apply_costs(source):
+            return
+
+        target.is_full_dodging = True
+        logger.info(f"{source.name} prepares to dodge all the attacks.")
 
 
 class Grapple(Action):

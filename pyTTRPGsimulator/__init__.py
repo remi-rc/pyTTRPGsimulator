@@ -2,7 +2,7 @@ import logging
 
 
 # Setup logging
-def setup_logging(level=logging.INFO):
+def setup_logging(level=logging.INFO, log_filename="game_logs.log"):
     logger = logging.getLogger(__name__)
     logger.setLevel(level)
 
@@ -13,13 +13,18 @@ def setup_logging(level=logging.INFO):
         ch = logging.StreamHandler()
         ch.setLevel(level)
 
+        # File handler
+        fh = logging.FileHandler(log_filename)
+        fh.setLevel(level)
+
         # Formatter
-        # formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
         formatter = logging.Formatter("%(message)s")
         ch.setFormatter(formatter)
+        fh.setFormatter(formatter)
 
-        # Adding handler to logger
+        # Adding handlers to logger
         logger.addHandler(ch)
+        logger.addHandler(fh)
 
     return logger
 

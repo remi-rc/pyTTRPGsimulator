@@ -19,6 +19,8 @@ Remi = rpg.Actor(
     physical_defense=8,
     combat_mastery=1,
     Might=3,
+    Agility=1,
+    Charisma=-1,
     name="Remi",
 )
 

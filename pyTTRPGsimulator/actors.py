@@ -125,6 +125,8 @@ class Actor:
         self.advantage_count = 0  # Track the number of advantages gained
         self.one_time_hit_bonus = 0  # A bonus from help action
         self.help_count = 0  # number of times the actor has provided help this round
+        self.is_dodging = False
+        self.is_full_dodging = False
 
     def __str__(self) -> str:
         equipped_items_str = (
@@ -169,12 +171,14 @@ class Actor:
         #     print("Already selecting a valid target")
         #     return
 
-        # Check if current target is dead
-        if self.current_target and self.current_target.health_points <= 0:
-            self.current_target = None
-
         # Remove target if allied actor (because of Help, Heal, Mind Control, etc)
         if self.current_target in team_allies:
+            self.current_target = None
+
+        # Check if current target is dead
+        if self.current_target and self.current_target.health_points <= 0:
+            # Since we untarget enemy, we remove actor from list of targeting enemies
+            self.current_target.targeting_enemies.remove(self)
             self.current_target = None
 
         # Filter out dead enemies
@@ -182,7 +186,9 @@ class Actor:
 
         # Determine enemies targeting this actor
         enemies_targeting_me = [
-            enemy for enemy in self.targeting_enemies if enemy.current_target == self
+            enemy
+            for enemy in self.targeting_enemies
+            if (enemy.current_target == self) and enemy.is_alive
         ]
 
         # Determine the weakest ally who is still alive
@@ -207,6 +213,8 @@ class Actor:
             self.current_target = self.select_target(alive_enemies)
 
         if self.current_target:
+            # We add actor to the list of targeting enemies :
+            self.current_target.targeting_enemies.append(self)
             logger.info(f"{self.name} is now targeting {self.current_target.name}")
 
     def select_target(self, candidates: List["Actor"]) -> Optional["Actor"]:
@@ -324,7 +332,7 @@ class Actor:
             total_damage += self.calculate_damage_taken(damage)
         self.health_points -= total_damage
         logger.info(
-            f"{self.name} took {total_damage} {damage.damage_type} damage and has {self.health_points} HP left."
+            f"    {self.name} took {total_damage} {damage.damage_type} damage and has {self.health_points} HP left."
         )
 
     def add_item(self, item: Union[Item, List[Item]]):
@@ -493,6 +501,14 @@ class Actor:
 
     def invalidate_modifiers_cache(self):
         self._dynamic_cache.clear()
+
+    def new_turn(self):
+        """Implement all actions to be undertaken at the begining of an actor's turn."""
+        self.is_full_dodging = False
+
+    def end_turn(self):
+        """Implement all actions to be undertaken at the end of an actor's turn."""
+        return
 
     def new_round(self):
         """

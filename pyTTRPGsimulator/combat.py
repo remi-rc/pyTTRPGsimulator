@@ -1,7 +1,7 @@
 import logging
 from typing import List
 from .actors import Actor
-from .actions import Attack, Help, GainAdvantage
+from .actions import Attack, Help, GainAdvantage, Dodge, Full_Dodge
 import matplotlib.pyplot as plt
 
 # Set up logging
@@ -170,7 +170,7 @@ class CombatManager:
 
             # If the current actor is alive, proceed with their turn
             if current_actor.is_alive:
-                self.update_targeting(current_actor)
+                # self.update_targeting(current_actor)
                 return current_actor
 
             # If all actors are dead, return None to indicate no more turns
@@ -186,17 +186,18 @@ class CombatManager:
         for actor in self.turn_order:
             actor.new_round()
 
-        for _ in range(len(self.turn_order)):
-            current_actor = self.next_turn_actor()
-            if current_actor:
-                self.execute_turn(current_actor)
-                # Only increment turn count if a turn has been played
+        for ij in range(len(self.turn_order)):
+            current_actor = self.turn_order[ij]
+            current_actor.new_turn()
+
+            # Only increment turn count if a turn has been played by an actor who was alive
+            if actor.is_alive:
                 self.turns_count += 1
+            self.execute_turn(current_actor)
+
+            current_actor.end_turn()
             if self.is_combat_over():
                 break
-
-        # Remove dead actors from the turn order (a bit buggy)
-        # self.turn_order = [actor for actor in self.turn_order if actor.is_alive]
 
     def run_combat(self):
         """
@@ -234,36 +235,44 @@ class CombatManager:
         logger.info(f"")
         logger.info(f"{actor.name}'s turn:")
 
-        if not actor.current_target:
+        if not actor.is_alive:
+            logger.info(
+                f"{actor.name} is at Death's doors and does nothing this turn !"
+            )
+
+        else:
+
             self.update_targeting(actor)
-        elif actor.current_target.health_points <= 0:
-            self.update_targeting(actor)
 
-        while (
-            actor.action_points > 0
-            and actor.current_target.health_points > 0
-            and not self.is_combat_over()
-        ):
-            allies, enemies = self.get_allies_enemies(actor)
+            while (
+                actor.action_points > 0
+                and actor.current_target.health_points > 0
+                and not self.is_combat_over()
+            ):
+                allies, enemies = self.get_allies_enemies(actor)
 
-            # Reselect enemy if current target is an ally (because of Help action or Healing)
-            if actor.current_target in allies:
-                self.update_targeting(actor)
+                # Reselect enemy if current target is an ally (because of Help action or Healing)
+                if actor.current_target in allies:
+                    self.update_targeting(actor)
 
-            action = actor.strategy.choose_action(actor, allies, enemies)
-            if isinstance(action, GainAdvantage):
-                action.execute(actor)
-            elif isinstance(action, Attack):
-                action.execute(actor, [actor.current_target])
-            elif isinstance(action, Help):
-                action.execute(actor, [actor.current_target])
+                action = actor.strategy.choose_action(actor, allies, enemies)
+                if isinstance(action, GainAdvantage):
+                    action.execute(actor)
+                elif isinstance(action, Attack):
+                    action.execute(actor, [actor.current_target])
+                elif isinstance(action, Help):
+                    action.execute(actor, [actor.current_target])
+                elif isinstance(action, Dodge):
+                    action.execute(actor)
+                elif isinstance(action, Full_Dodge):
+                    action.execute(actor)
 
-            # Reselect enemy if current enemy is dead
-            if actor.current_target.health_points <= 0:
-                self.update_targeting(actor)
+                # Reselect enemy if current enemy is dead
+                if actor.current_target.health_points <= 0:
+                    self.update_targeting(actor)
 
-            if self.is_combat_over():
-                return
+                if self.is_combat_over():
+                    return
 
     def is_combat_over(self):
         """
@@ -285,7 +294,9 @@ class CombatManager:
         logger.info(f"################ NEW ROUND ################")
         logger.info(f"Alive actors at round {self.rounds_count}:")
         for actor in alive_actors:
-            logger.info(f"Actor: {actor.name}, Health Points: {actor.health_points}")
+            logger.info(
+                f"    {actor.name}, HPs: {actor.health_points}/{actor.max_health_points}"
+            )
 
     def fight_debrief(self) -> str:
         """

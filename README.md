@@ -4,13 +4,13 @@ __pyTTRGsimulator__
 
 # Introduction
 
-This code enables Dungeon Masters and players of table-top role player games (TTRPG) to simulate combats and predict the likelihood of a win, between two teams of "actors" (i.e., player characters, monsters). The code is quite general, but has beem tailored to be used along the DC20 TTRPG. It has numerous features, some of them detailed below.
+This code enables Dungeon Masters and players of table-top role player games (TTRPG) to simulate combats and predict the likelihood of a win, between two teams of "actors" (i.e., player characters, monsters). The code is quite general, but has been tailored to be used along the DC20 TTRPG. It has numerous features, some of them detailed below.
 
 1. Creation of items (armors, weapons).
 2. A damage system that can interact with resistance and vulnerabilities of actors.
 3. A logger than can detail actions taken during a fight to see what happened.
 4. A Strategy class, that details how an actor takes their actions.
-5. A theater of mind approach where no grid is required.
+5. A theater of the mind approach where no grid is required.
 
 # Installation
 Clone the repository:
