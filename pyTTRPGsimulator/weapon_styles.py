@@ -1,14 +1,4 @@
 from abc import ABC, abstractmethod
-from .conditions import (
-    Bleeding,
-    Dazed,
-    Exposed,
-    Grappled,
-    Hindered,
-    Impaired,
-    Petrified,
-    Slowed,
-)
 
 
 class WeaponStyle(ABC):
@@ -30,7 +20,7 @@ class Axe_style(WeaponStyle):
         bonus_hit = 0
         bonus_damage = 0
         # Axe does +1 damage if the target is bleeding
-        if any(isinstance(cond, Bleeding) for cond in defender.conditions):
+        if defender.attributes.is_bleeding:
             bonus_damage = 1
         return bonus_damage, bonus_hit
 
@@ -39,8 +29,8 @@ class Bow_style(WeaponStyle):
     def apply_effect(self, defender):
         bonus_hit = 0
         bonus_damage = 0
-        # Axe does +1 damage if the target is bleeding
-        if any(isinstance(cond, Slowed) for cond in defender.conditions):
+        # Bow does +1 damage if the target is slowed
+        if defender.attributes.is_slowed:
             bonus_damage = 1
         return bonus_damage, bonus_hit
 
@@ -57,8 +47,8 @@ class Fist_style(WeaponStyle):
     def apply_effect(self, defender):
         bonus_hit = 0
         bonus_damage = 0
-        # Axe does +1 damage if the target is bleeding
-        if any(isinstance(cond, Grappled) for cond in defender.conditions):
+        # Fist does +1 damage if the target is grappled
+        if defender.attributes.is_grappled:
             bonus_damage = 1
         return bonus_damage, bonus_hit
 
@@ -67,10 +57,8 @@ class Hammer_style(WeaponStyle):
     def apply_effect(self, defender):
         bonus_hit = 0
         bonus_damage = 0
-        # Axe does +1 damage if the target is bleeding
-        if any(isinstance(cond, Dazed) for cond in defender.conditions) or any(
-            isinstance(cond, Petrified) for cond in defender.conditions
-        ):
+        # Hammer does +1 damage if the target is dazed or petrified
+        if defender.attributes.is_dazed or defender.attributes.is_petrified:
             bonus_damage = 1
         return bonus_damage, bonus_hit
 
@@ -79,8 +67,8 @@ class Pick_style(WeaponStyle):
     def apply_effect(self, defender):
         bonus_hit = 0
         bonus_damage = 0
-        # Axe does +1 damage if the target is bleeding
-        if any(isinstance(cond, Impaired) for cond in defender.conditions):
+        # Pick does +1 damage if the target is impaired
+        if defender.attributes.is_impaired:
             bonus_damage = 1
         return bonus_damage, bonus_hit
 
@@ -97,10 +85,8 @@ class Staff_style(WeaponStyle):
     def apply_effect(self, defender):
         bonus_hit = 0
         bonus_damage = 0
-        # Axe does +1 damage if the target is bleeding
-        if any(isinstance(cond, Hindered) for cond in defender.conditions) or any(
-            isinstance(cond, Petrified) for cond in defender.conditions
-        ):
+        # Staff does +1 damage if the target is hindered or petrified
+        if defender.attributes.is_hindered or defender.attributes.is_petrified:
             bonus_damage = 1
         return bonus_damage, bonus_hit
 
@@ -109,8 +95,8 @@ class Sword_style(WeaponStyle):
     def apply_effect(self, defender):
         bonus_hit = 0
         bonus_damage = 0
-        # Axe does +1 damage if the target is bleeding
-        if any(isinstance(cond, Exposed) for cond in defender.conditions):
+        # Sword does +1 damage if the target is exposed
+        if defender.attributes.is_exposed:
             bonus_damage = 1
         return bonus_damage, bonus_hit
 

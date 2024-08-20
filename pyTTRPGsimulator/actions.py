@@ -3,10 +3,8 @@ from abc import ABC, abstractmethod
 from typing import List, Optional, TYPE_CHECKING
 import random
 
-from .conditions import Condition
 from .damages import Damage
-
-# from .items import RangeWeapon
+from .status import StatusEffect
 
 if TYPE_CHECKING:
     from .actors import Actor
@@ -41,25 +39,25 @@ class Action(ABC):
         Returns:
             bool: True if the actor has enough points to perform the action, False otherwise.
         """
-        if actor.action_points < self.action_points_cost:
+        if actor.current_action_points < self.action_points_cost:
             logger.warning(
                 f"{actor.name} does not have enough action points to perform this action."
             )
             return False
-        if actor.mana_points < self.mana_points_cost:
+        if actor.current_mana_points < self.mana_points_cost:
             logger.warning(
                 f"{actor.name} does not have enough mana points to perform this action."
             )
             return False
-        if actor.stamina_points < self.stamina_points_cost:
+        if actor.current_stamina_points < self.stamina_points_cost:
             logger.warning(
                 f"{actor.name} does not have enough stamina points to perform this action."
             )
             return False
 
-        actor.action_points -= self.action_points_cost
-        actor.mana_points -= self.mana_points_cost
-        actor.stamina_points -= self.stamina_points_cost
+        actor.current_action_points -= self.action_points_cost
+        actor.current_mana_points -= self.mana_points_cost
+        actor.current_stamina_points -= self.stamina_points_cost
         return True
 
     @abstractmethod
@@ -139,7 +137,7 @@ class Attack(Action):
                 + source.combat_mastery
                 + source.one_time_hit_bonus
             )
-            is_natural_20 = attack_roll == 20
+            is_critical_hit = attack_roll == 20
 
             # Remove any one-time hit bonus after it's used
             source.one_time_hit_bonus = 0
@@ -150,10 +148,13 @@ class Attack(Action):
             bonus_dmg_ws, bonus_hit_ws = weapon.apply_styles(target)
             attack_tot_target = attack_tot + bonus_hit_ws
 
-            if attack_tot_target >= target.physical_defense or is_natural_20:
+            if attack_tot_target >= target.physical_defense or is_critical_hit:
+                logger.info(f"{source.name}'s attack hits {target.name}.")
+
+                # TODO : handle brutal and heavy hit correctly
                 damage_bonus = int((attack_tot_target - target.physical_defense) // 5)
-                if is_natural_20:
-                    damage_bonus += 2
+                if is_critical_hit:
+                    damage_bonus += source.critical_hit_damage
 
                 for ij in range(len(weapon.damages)):
                     if ij == 0:
@@ -163,7 +164,6 @@ class Attack(Action):
                     else:
                         total_damage = weapon.damages[ij].value
 
-                    logger.info(f"{source.name}'s attack hits {target.name}.")
                     target.take_damage(
                         [
                             Damage(
@@ -202,7 +202,9 @@ class InflictDamage(Action):
                     f"{source.name} inflicts {damage.value} {damage.damage_type} damage to {target.name}"
                 )
                 target.take_damage([damage])
-            logger.info(f"{target.name} has {target.health_points} health left.")
+            logger.info(
+                f"{target.name} has {target.current_health_points} health left."
+            )
 
 
 class Target(Action):
@@ -383,7 +385,7 @@ class Help(Action):
             logger.info(f"{source.name} helps {ally.name}")
 
 
-class ImposeCondition(Action):
+class ImposeStatusEffect(Action):
     """
     Action to impose conditions on targets.
     """
@@ -393,10 +395,10 @@ class ImposeCondition(Action):
         action_points_cost: int = 0,
         mana_points_cost: int = 0,
         stamina_points_cost: int = 0,
-        conditions: List["Condition"] = None,
+        status: List["StatusEffect"] = None,
     ):
         super().__init__(action_points_cost, mana_points_cost, stamina_points_cost)
-        self.conditions = conditions if conditions is not None else []
+        self.status = status if status is not None else []
 
     def execute(self, source: "Action", targets: List["Action"]):
         if not self._apply_costs(source):
@@ -404,13 +406,13 @@ class ImposeCondition(Action):
 
         for target in targets:
             logger.info(f"{source.name} is imposing conditions on {target.name}")
-            for condition in self.conditions:
+            for status in self.status:
                 logger.info(
-                    f"{source.name} imposes {condition.__class__.__name__} on {target.name}"
+                    f"{source.name} imposes {status.__class__.__name__} on {target.name}"
                 )
-                target.add_modifier(condition)
+                target.add_modifier(status)
             logger.info(
-                f"{target.name} now has the following conditions: {target.modifier_manager.get_modifiers(Condition)}"
+                f"{target.name} now has the following conditions: {target.modifier_manager.get_modifiers(StatusEffect)}"
             )
 
 

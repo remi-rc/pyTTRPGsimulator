@@ -18,16 +18,16 @@ Remi = rpg.Actor(
     health_points=8,
     physical_defense=8,
     combat_mastery=1,
-    Might=3,
-    Agility=1,
-    Charisma=-1,
+    might=3,
+    agility=1,
+    charisma=-1,
     name="Remi",
 )
 
 # You can print some important info of the actor as follows
 print(Remi)
 
-# Note that the Actor class does not know the character creation rules, so you can input almost anything (at your own risk)
+# %% Note that the Actor class does not know the character creation rules, so you can input almost anything (at your own risk)
 
 # %% Create an item
 # Our hero is a little too weak right now. Let's add some armor and weapon !

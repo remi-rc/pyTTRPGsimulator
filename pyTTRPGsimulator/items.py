@@ -1,41 +1,54 @@
 from typing import List, Optional, Union
+from dataclasses import dataclass, field
 from .damages import Damage, Physical, Mystical
-from .modifiers import Modifier, DefenseModifier, Resistance, Vulnerability
+from .modifiers import DamageModifier, Resistance, Vulnerability
 from .weapon_styles import *
+from .attributes import Attributes
 
 
 class Item:
     def __init__(
         self,
-        modifiers: Optional[List["Modifier"]] = None,
-        is_magic=False,
         name: str = "",
+        damage_modifiers: Optional[List["DamageModifier"]] = None,
+        **kwargs,  # Check the Attributes class to know these additional arguments
     ):
         self.name = name
-        self.modifiers = modifiers if modifiers is not None else []
-        self.is_magic = is_magic  # By default, items are not magic
+        self.damage_modifiers = damage_modifiers if damage_modifiers is not None else []
+        self.attributes = Attributes()
 
-    def add_modifier(self, modifier: Modifier):
+        # Update the attributes with any custom values provided via kwargs
+        for key, value in kwargs.items():
+            if hasattr(self.attributes, key):
+                setattr(self.attributes, key, value)
+            else:
+                raise AttributeError(f"'Attributes' object has no attribute '{key}'")
+
+    def add_modifier(self, modifier: DamageModifier):
         if isinstance(modifier, list):
-            self.modifiers.extend(modifier)
+            self.damage_modifiers.extend(modifier)
         else:
-            self.modifiers.append(modifier)
+            self.damage_modifiers.append(modifier)
 
-    def remove_modifier(self, modifier: Modifier):
+    def remove_modifier(self, modifier: DamageModifier):
         if isinstance(modifier, list):
             for mod in modifier:
-                if mod in self.modifiers:
-                    self.modifiers.remove(mod)
+                if mod in self.damage_modifiers:
+                    self.damage_modifiers.remove(mod)
         else:
-            if modifier in self.modifiers:
-                self.modifiers.remove(modifier)
+            if modifier in self.damage_modifiers:
+                self.damage_modifiers.remove(modifier)
+
+    @property
+    def is_magic(self):
+        return self.attributes.is_magic
 
     def __str__(self) -> str:
         # Extract and format resistances and vulnerabilities
         resistances = []
         vulnerabilities = []
 
-        for mod in self.modifiers:
+        for mod in self.damage_modifiers:
             if isinstance(mod, Resistance):
                 if mod.is_multiplicative:
                     resistances.append(
@@ -66,7 +79,7 @@ class Item:
         )
 
     def __repr__(self):
-        return f"Item(name={self.name}, is_magic={self.is_magic}, modifiers={self.modifiers})"
+        return f"Item(name={self.name}, is_magic={self.is_magic}, modifiers={self.damage_modifiers})"
 
 
 class ItemManager:
@@ -75,9 +88,12 @@ class ItemManager:
 
     def add_item(self, item: Union[Item, List[Item]]):
         if isinstance(item, list):
-            self.items.extend(item)
+            for i in item:
+                if i not in self.items:
+                    self.items.append(i)
         else:
-            self.items.append(item)
+            if item not in self.items:
+                self.items.append(item)
 
     def remove_item(self, item: Union[Item, List[Item]]):
         if isinstance(item, list):
@@ -96,77 +112,46 @@ class ItemManager:
 
 
 class Armor(Item):
-    def __init__(
-        self,
-        physical_defense: int = 0,
-        mystical_defense: int = 0,
-        physical_damage_reduction: int = 0,
-        mystical_damage_reduction: int = 0,
-        modifiers: Optional[List["Modifier"]] = None,
-        is_magic=False,
-        name: str = "",
-    ):
 
-        base_modifiers = []
+    def __repr__(self):
+        return (
+            f"Armor(name={self.name}, physical_defense={self.attributes.physical_defense}, "
+            f"mystical_defense={self.attributes.mystical_defense}, "
+            f"physical_damage_reduction={self.attributes.physical_damage_reduction}, "
+            f"mystical_damage_reduction={self.attributes.mystical_damage_reduction}, "
+            f"modifiers={self.damage_modifiers})"
+        )
 
-        if physical_defense > 0:
-            base_modifiers.append(DefenseModifier(physical_defense=physical_defense))
-
-        if mystical_defense > 0:
-            base_modifiers.append(DefenseModifier(mystical_defense=mystical_defense))
-
-        if physical_damage_reduction > 0:
-            base_modifiers.append(
-                DefenseModifier(physical_damage_reduction=physical_damage_reduction)
-            )
-
-        if mystical_damage_reduction > 0:
-            base_modifiers.append(
-                DefenseModifier(mystical_damage_reduction=mystical_damage_reduction)
-            )
-
-        if modifiers:
-            base_modifiers.extend(modifiers)
-
-        super().__init__(base_modifiers, is_magic, name)
-
-        self.physical_damage_reduction = physical_damage_reduction
-        self.mystical_damage_reduction = mystical_damage_reduction
-
-    def __str__(self):
+    def __str__(self) -> str:
         base_str = super().__str__()
         return (
-            f"{base_str}\nPhysical Defense: {self.base_physical_defense}\n"
-            f"Mystical Defense: {self.base_mystical_defense}\n"
-            f"Physical Damage Reduction: {self.physical_damage_reduction}\n"
-            f"Mystical Damage Reduction: {self.mystical_damage_reduction}"
+            f"{base_str}\n"
+            f"Physical Defense: {self.attributes.physical_defense}\n"
+            f"Mystical Defense: {self.attributes.mystical_defense}\n"
+            f"Physical Damage Reduction: {self.attributes.physical_damage_reduction}\n"
+            f"Mystical Damage Reduction: {self.attributes.mystical_damage_reduction}"
+        )
+
+    def __repr__(self):
+        return (
+            f"Armor(name={self.name}, physical_defense={self.attributes.physical_defense}, "
+            f"mystical_defense={self.attributes.mystical_defense}, "
+            f"physical_damage_reduction={self.attributes.physical_damage_reduction}, "
+            f"mystical_damage_reduction={self.attributes.mystical_damage_reduction}, "
+            f"modifiers={self.damage_modifiers})"
         )
 
 
 class Shield(Armor):
-    def __init__(
-        self,
-        physical_defense: int = 0,
-        mystical_defense: int = 0,
-        physical_damage_reduction: int = 0,
-        mystical_damage_reduction: int = 0,
-        modifiers: Optional[List["Modifier"]] = None,
-        is_magic=False,
-        name: str = "",
-    ):
 
-        super().__init__(
-            physical_defense,
-            mystical_defense,
-            physical_damage_reduction,
-            mystical_damage_reduction,
-            modifiers,
-            is_magic,
-            name,
+    def __repr__(self):
+        return (
+            f"Shield(name={self.name}, physical_defense={self.attributes.physical_defense}, "
+            f"mystical_defense={self.attributes.mystical_defense}, "
+            f"physical_damage_reduction={self.attributes.physical_damage_reduction}, "
+            f"mystical_damage_reduction={self.attributes.mystical_damage_reduction}, "
+            f"modifiers={self.damage_modifiers})"
         )
-
-    def __str__(self):
-        return f"Shield\n" + super().__str__()
 
 
 class Weapon(Item):
@@ -174,12 +159,16 @@ class Weapon(Item):
         self,
         damages: List[Damage],
         weapon_range: int,
-        modifiers: Optional[List["Modifier"]] = None,
+        damage_modifiers: Optional[List["DamageModifier"]] = None,
         weapon_styles: Optional[List[WeaponStyle]] = None,
-        is_magic=False,
         name: str = "",
+        **kwargs,
     ):
-        super().__init__(modifiers, is_magic, name)
+        super().__init__(
+            name,
+            damage_modifiers,
+            **kwargs,
+        )
         self.damages = damages
         self.weapon_range = weapon_range
         self.weapon_styles = weapon_styles if weapon_styles is not None else []
@@ -207,13 +196,18 @@ class MeleeWeapon(Weapon):
         self,
         damages: List[Damage],
         weapon_range: int = 1,
-        modifiers: Optional[List["Modifier"]] = None,
+        damage_modifiers: Optional[List["DamageModifier"]] = None,
         weapon_styles: Optional[List["WeaponStyle"]] = None,
-        is_magic=False,
         name: str = "",
+        **kwargs,
     ):
         super().__init__(
-            damages, weapon_range, modifiers, weapon_styles, is_magic, name
+            damages,
+            weapon_range,
+            damage_modifiers,
+            weapon_styles,
+            name,
+            **kwargs,
         )
 
     def __str__(self):
@@ -225,13 +219,18 @@ class RangeWeapon(Weapon):
         self,
         damages: List[Damage],
         weapon_range: int = 6,
-        modifiers: Optional[List["Modifier"]] = None,
+        damage_modifiers: Optional[List["DamageModifier"]] = None,
         weapon_styles: Optional[List["WeaponStyle"]] = None,
-        is_magic=False,
         name: str = "",
+        **kwargs,
     ):
         super().__init__(
-            damages, weapon_range, modifiers, weapon_styles, is_magic, name
+            damages,
+            weapon_range,
+            damage_modifiers,
+            weapon_styles,
+            name,
+            **kwargs,
         )
 
     def __str__(self):
@@ -244,7 +243,7 @@ def create_weapon_class(weapon_name, weapon_style):
             self,
             damages: List[Damage],
             weapon_range: int = 1,
-            modifiers: Optional[List["Modifier"]] = None,
+            modifiers: Optional[List["DamageModifier"]] = None,
             is_magic=False,
             name: str = "",
         ):
