@@ -1,47 +1,25 @@
 from typing import List, Optional, Union
-from dataclasses import dataclass, field
-from .damages import Damage, Physical, Mystical
+from .damages import Damage
 from .modifiers import DamageModifier, Resistance, Vulnerability
 from .weapon_styles import *
+from .entity import Entity
+from .traits import Trait
 from .attributes import Attributes
 
 
-class Item:
+class Item(Entity):
     def __init__(
         self,
         name: str = "",
-        damage_modifiers: Optional[List["DamageModifier"]] = None,
-        **kwargs,  # Check the Attributes class to know these additional arguments
+        traits: Optional[List["Trait"]] = None,
+        attributes: "Attributes" = None,
+        **kwargs,
     ):
-        self.name = name
-        self.damage_modifiers = damage_modifiers if damage_modifiers is not None else []
-        self.attributes = Attributes()
-
-        # Update the attributes with any custom values provided via kwargs
-        for key, value in kwargs.items():
-            if hasattr(self.attributes, key):
-                setattr(self.attributes, key, value)
-            else:
-                raise AttributeError(f"'Attributes' object has no attribute '{key}'")
-
-    def add_modifier(self, modifier: DamageModifier):
-        if isinstance(modifier, list):
-            self.damage_modifiers.extend(modifier)
-        else:
-            self.damage_modifiers.append(modifier)
-
-    def remove_modifier(self, modifier: DamageModifier):
-        if isinstance(modifier, list):
-            for mod in modifier:
-                if mod in self.damage_modifiers:
-                    self.damage_modifiers.remove(mod)
-        else:
-            if modifier in self.damage_modifiers:
-                self.damage_modifiers.remove(modifier)
+        super().__init__(name=name, traits=traits, attributes=attributes, **kwargs)
 
     @property
     def is_magic(self):
-        return self.attributes.is_magic
+        return self.has_magic_weapon + self.has_magic_armor
 
     def __str__(self) -> str:
         # Extract and format resistances and vulnerabilities
@@ -157,21 +135,31 @@ class Shield(Armor):
 class Weapon(Item):
     def __init__(
         self,
-        damages: List[Damage],
-        weapon_range: int,
-        damage_modifiers: Optional[List["DamageModifier"]] = None,
-        weapon_styles: Optional[List[WeaponStyle]] = None,
         name: str = "",
+        traits: Optional[List["Trait"]] = None,
+        attributes: "Attributes" = None,
+        damages: List["Damage"] = None,
+        weapon_range: int = 1,
+        weapon_styles: Optional[List["WeaponStyle"]] = None,
         **kwargs,
     ):
-        super().__init__(
-            name,
-            damage_modifiers,
-            **kwargs,
-        )
-        self.damages = damages
+        print("here", name, damages, weapon_range, traits, attributes)
+
+        # Ensure damages is a list
+        if damages is None:
+            raise TypeError("Expected a Damage instance or a list of Damage instances.")
+        elif isinstance(damages, Damage):
+            self.damages = [damages]
+        elif isinstance(damages, list) and all(isinstance(d, Damage) for d in damages):
+            self.damages = damages
+        else:
+            raise TypeError("Expected a Damage instance or a list of Damage instances.")
+            print(damages)
+
         self.weapon_range = weapon_range
         self.weapon_styles = weapon_styles if weapon_styles is not None else []
+
+        super().__init__(name=name, traits=traits, attributes=attributes, **kwargs)
 
     def apply_styles(self, defender):
         bonus_damage_tot, bonus_hit_tot = 0, 0
@@ -194,19 +182,21 @@ class Weapon(Item):
 class MeleeWeapon(Weapon):
     def __init__(
         self,
-        damages: List[Damage],
-        weapon_range: int = 1,
-        damage_modifiers: Optional[List["DamageModifier"]] = None,
-        weapon_styles: Optional[List["WeaponStyle"]] = None,
         name: str = "",
+        damages: List["Damage"] = None,
+        weapon_range: int = 1,
+        traits: Optional[List["Trait"]] = None,
+        attributes: "Attributes" = None,
+        weapon_styles: Optional[List["WeaponStyle"]] = None,
         **kwargs,
     ):
         super().__init__(
-            damages,
-            weapon_range,
-            damage_modifiers,
-            weapon_styles,
-            name,
+            name=name,
+            damages=damages,
+            weapon_range=weapon_range,
+            traits=traits,
+            attributes=attributes,
+            weapon_styles=weapon_styles,
             **kwargs,
         )
 
@@ -215,23 +205,6 @@ class MeleeWeapon(Weapon):
 
 
 class RangeWeapon(Weapon):
-    def __init__(
-        self,
-        damages: List[Damage],
-        weapon_range: int = 6,
-        damage_modifiers: Optional[List["DamageModifier"]] = None,
-        weapon_styles: Optional[List["WeaponStyle"]] = None,
-        name: str = "",
-        **kwargs,
-    ):
-        super().__init__(
-            damages,
-            weapon_range,
-            damage_modifiers,
-            weapon_styles,
-            name,
-            **kwargs,
-        )
 
     def __str__(self):
         return f"Range Weapon\n" + super().__str__()
@@ -241,14 +214,21 @@ def create_weapon_class(weapon_name, weapon_style):
     class Weapon(MeleeWeapon):
         def __init__(
             self,
-            damages: List[Damage],
-            weapon_range: int = 1,
-            modifiers: Optional[List["DamageModifier"]] = None,
-            is_magic=False,
             name: str = "",
+            damages: List["Damage"] = None,
+            weapon_range: int = 1,
+            traits: Optional[List["Trait"]] = None,
+            attributes: "Attributes" = None,
+            **kwargs,
         ):
             super().__init__(
-                damages, weapon_range, modifiers, [weapon_style], is_magic, name
+                name=name,
+                damages=damages,
+                weapon_range=weapon_range,
+                traits=traits,
+                attributes=attributes,
+                weapon_styles=[weapon_style],
+                **kwargs,
             )
 
     Weapon.__name__ = weapon_name

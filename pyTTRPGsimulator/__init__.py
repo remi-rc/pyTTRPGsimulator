@@ -29,12 +29,13 @@ def setup_logging(level=logging.INFO, log_filename="game_logs.log"):
     return logger
 
 
+from .entity import *
 from .attributes import *
 from .damages import *
 from .modifiers import *
 from .items import *
 from .actors import *
-from .status import *
+from .traits import *
 from .weapon_styles import *
 from .actions import *
 from .combat import *

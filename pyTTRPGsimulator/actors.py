@@ -9,7 +9,8 @@ from .damages import Damage, Physical
 from .modifiers import DamageModifier, ModifierManager, Resistance, Vulnerability
 from .strategy import DefaultStrategy
 from .attributes import Attributes, actor_attributes
-from .status import StatusEffect, StatusManager
+from .traits import Trait, TraitsManager
+from .entity import Entity
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -18,50 +19,25 @@ logger.info("This is a test info message from module actors")
 logger.error("This is a test error message from module actors")
 
 
-class Actor:
+class Actor(Entity):
     def __init__(
         self,
         name: str = "",
         items: Optional[List["Item"]] = None,
-        damage_modifiers: Optional[List["DamageModifier"]] = None,
+        traits: Optional[List["Trait"]] = None,
+        attributes: "Attributes" = None,
         target_mode: str = "target_weakest",
         strategy=DefaultStrategy(),
         **kwargs,  # Check the Attributes class to know these additional arguments
     ):
-        # Statistics
-        self.name = name
-        self.base_attributes = actor_attributes
 
         # Lazy evaluation cache
         self._cached_attributes = None
         self._cached_modifiers: Dict[Type[DamageModifier], List[DamageModifier]] = {}
 
-        # Update the attributes with any custom values provided via kwargs
-        for key, value in kwargs.items():
-            if hasattr(self.base_attributes, key):
-                setattr(self.base_attributes, key, value)
-            else:
-                raise AttributeError(f"'Attributes' object has no attribute '{key}'")
-
-        # Items managemer
+        # Items management
         self.item_manager = ItemManager()
         self.item_manager.add_item(items if items is not None else [])
-
-        # DamageModifier manager (resistance and vulnerabilities)
-        self.modifier_manager = ModifierManager()
-        self.modifier_manager.add_modifier(
-            damage_modifiers if damage_modifiers is not None else []
-        )
-
-        # Condition manager
-        self.status_manager = StatusManager(entity=self)  # Link status manager to actor
-
-        # Set resources
-        self.current_health_points = self.max_health_points
-        self.current_stamina_points = self.max_stamina_points
-        self.current_grit_points = self.max_grit_points
-        self.current_mana_points = self.max_mana_points
-        self.current_action_points = self.max_action_points
 
         # Combat-related properties
         self.strategy = strategy
@@ -77,7 +53,15 @@ class Actor:
         self.position_X = 0
         self.position_Y = 0
 
-        self._generate_attribute_properties()
+        attributes = attributes if attributes is not None else actor_attributes
+        super().__init__(name, traits, attributes, **kwargs)
+
+        # Set resources
+        self.current_health_points = self.max_health_points
+        self.current_stamina_points = self.max_stamina_points
+        self.current_grit_points = self.max_grit_points
+        self.current_mana_points = self.max_mana_points
+        self.current_action_points = self.max_action_points
 
     def reset_attack_count(self):
         self.attack_count = 0
@@ -266,20 +250,20 @@ class Actor:
             self.item_manager.remove_item([item])
         self.invalidate_cache()
 
-    def add_status(self, status: Union[StatusEffect, List[StatusEffect]]):
-        if isinstance(status, list):
-            for s in status:
-                self.status_manager.add_status(s)
+    def add_trait(self, trait: Union[Trait, List[Trait]]):
+        if isinstance(trait, list):
+            for s in trait:
+                self.traits_manager.add_trait(s)
         else:
-            self.status_manager.add_status(status)
+            self.traits_manager.add_trait(trait)
         self.invalidate_cache()
 
-    def remove_status(self, status: Union[StatusEffect, List[StatusEffect]]):
-        if isinstance(status, list):
-            for s in status:
-                self.status_manager.remove_status(s)
+    def remove_trait(self, trait: Union[Trait, List[Trait]]):
+        if isinstance(trait, list):
+            for s in trait:
+                self.traits_manager.remove_trait(s)
         else:
-            self.status_manager.remove_status(status)
+            self.traits_manager.remove_trait(trait)
         self.invalidate_cache()
 
     def invalidate_cache(self):
@@ -306,11 +290,9 @@ class Actor:
         Aggregate all modifiers of a specific base class from items and modifiers.
         """
         total_modifiers = []
-        print(self.item_manager.get_items() + self.status_manager.get_active_statuses())
         for item in (
-            self.item_manager.get_items() + self.status_manager.get_active_statuses()
+            self.item_manager.get_items() + self.traits_manager.get_active_traits()
         ):
-            print(item.name, item.damage_modifiers)
             for modifier in item.damage_modifiers:
                 if issubclass(type(modifier), base_class):
                     total_modifiers.append(modifier)
@@ -336,7 +318,7 @@ class Actor:
         return self._cached_modifiers[modifier_class]
 
     def new_round(self):
-        self.status_manager.update_statuses()
+        self.traits_manager.update_traits()
         self.current_action_points = self.max_action_points
         self.reset_attack_count()
         self.reset_advantage_count()
@@ -354,34 +336,14 @@ class Actor:
         return (
             max(
                 [
-                    self.attributes.might,
-                    self.attributes.agility,
-                    self.attributes.intelligence,
-                    self.attributes.charisma,
+                    self.might,
+                    self.agility,
+                    self.intelligence,
+                    self.charisma,
                 ]
             )
-            + self.attributes.prime_modifier_bonus
+            + self.prime_modifier_bonus
         )
-
-    @property
-    def max_health_points(self):
-        return self.attributes.health_points
-
-    @property
-    def max_stamina_points(self):
-        return self.attributes.stamina_points
-
-    @property
-    def max_grit_points(self):
-        return self.attributes.grit_points
-
-    @property
-    def max_mana_points(self):
-        return self.attributes.mana_points
-
-    @property
-    def max_action_points(self):
-        return self.attributes.action_points
 
     @property
     def weapons(self) -> List["Weapon"]:
@@ -426,20 +388,3 @@ class Actor:
         self.reset_advantage_count()
         self.help_count = 0
         logger.info(f"{self.name} has fully rested and all attributes are restored.")
-
-    def _generate_attribute_properties(self):
-        """
-        Dynamically generate properties for each attribute in the Attributes class.
-        """
-        for field in self.base_attributes.__dataclass_fields__:
-            # Create a property for each attribute in Attributes
-            setattr(
-                self.__class__,
-                field,
-                property(
-                    fget=lambda self, key=field: getattr(self.attributes, key),
-                    fset=lambda self, value, key=field: setattr(
-                        self.attributes, key, value
-                    ),
-                ),
-            )

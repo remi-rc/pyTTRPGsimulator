@@ -8,10 +8,10 @@ class Attributes:
     physical_damage_reduction: int = 0
     mystical_damage_reduction: int = 0
 
-    health_points: int = 0
-    stamina_points: int = 0
-    grit_points: int = 0
-    mana_points: int = 0
+    max_health_points: int = 0
+    max_stamina_points: int = 0
+    max_grit_points: int = 0
+    max_mana_points: int = 0
 
     death_door_HP_threshold = 0
 
@@ -44,7 +44,8 @@ class Attributes:
     combat_mastery: int = 0
     spell_DC: int = 0
 
-    action_points: int = 0
+    max_action_points: int = 0
+    max_attack_before_penalty: int = 0
     critical_hit_damage: int = 0
     critical_hit_threshold: int = 0  # negative value to reduce the threshold
     heavy_hit_damage: int = 0
@@ -54,7 +55,8 @@ class Attributes:
     mastery_light_armor: bool = False
     mastery_heavy_armor: bool = False
 
-    is_magic = False
+    has_magic_weapon = False
+    has_magic_armor = False
 
     true_damage_on_new_turn = 0
 
@@ -96,11 +98,12 @@ class Attributes:
 actor_attributes = Attributes(
     physical_defense=8,
     mystical_defense=8,
-    health_points=10,
-    action_points=4,
+    max_health_points=10,
+    max_action_points=4,
     heavy_hit_damage=1,
     brutal_hit_damage=1,
     critical_hit_damage=2,
+    max_attack_before_penalty=1,
     move_speed=5,
     critical_hit_threshold=20,
     mastery_light_armor=True,

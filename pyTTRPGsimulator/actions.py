@@ -4,7 +4,7 @@ from typing import List, Optional, TYPE_CHECKING
 import random
 
 from .damages import Damage
-from .status import StatusEffect
+from .traits import Trait
 
 if TYPE_CHECKING:
     from .actors import Actor
@@ -385,7 +385,7 @@ class Help(Action):
             logger.info(f"{source.name} helps {ally.name}")
 
 
-class ImposeStatusEffect(Action):
+class ImposeTrait(Action):
     """
     Action to impose conditions on targets.
     """
@@ -395,7 +395,7 @@ class ImposeStatusEffect(Action):
         action_points_cost: int = 0,
         mana_points_cost: int = 0,
         stamina_points_cost: int = 0,
-        status: List["StatusEffect"] = None,
+        status: List["Trait"] = None,
     ):
         super().__init__(action_points_cost, mana_points_cost, stamina_points_cost)
         self.status = status if status is not None else []
@@ -412,7 +412,7 @@ class ImposeStatusEffect(Action):
                 )
                 target.add_modifier(status)
             logger.info(
-                f"{target.name} now has the following conditions: {target.modifier_manager.get_modifiers(StatusEffect)}"
+                f"{target.name} now has the following conditions: {target.modifier_manager.get_modifiers(Trait)}"
             )
 
 
