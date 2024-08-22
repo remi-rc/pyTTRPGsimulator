@@ -54,7 +54,7 @@ class Actor(Entity):
         self.position_Y = 0
 
         attributes = attributes if attributes is not None else actor_attributes
-        super().__init__(name, traits, attributes, **kwargs)
+        super().__init__(name=name, traits=traits, attributes=attributes, **kwargs)
 
         # Set resources
         self.current_health_points = self.max_health_points
@@ -74,7 +74,7 @@ class Actor(Entity):
         Update the current target of the actor based on the given allies and enemies.
         """
         # Check if current target is dead
-        if self.current_target and self.current_target.health_points <= 0:
+        if self.current_target and self.current_target.current_health_points <= 0:
             self.current_target = None
 
         # Remove target if allied actor (because of Help, Heal, Mind Control, etc)
@@ -82,7 +82,9 @@ class Actor(Entity):
             self.current_target = None
 
         # Filter out dead enemies
-        alive_enemies = [enemy for enemy in team_enemies if enemy.health_points > 0]
+        alive_enemies = [
+            enemy for enemy in team_enemies if enemy.current_health_points > 0
+        ]
 
         # Determine enemies targeting this actor
         enemies_targeting_me = [
@@ -90,9 +92,9 @@ class Actor(Entity):
         ]
 
         # Determine the weakest ally who is still alive
-        alive_allies = [ally for ally in team_allies if ally.health_points > 0]
+        alive_allies = [ally for ally in team_allies if ally.current_health_points > 0]
         weakest_ally = min(
-            alive_allies, key=lambda ally: ally.health_points, default=None
+            alive_allies, key=lambda ally: ally.current_health_points, default=None
         )
 
         if enemies_targeting_me:
@@ -102,7 +104,7 @@ class Actor(Entity):
             self.target_mode == "help_ally"
             and weakest_ally
             and weakest_ally.current_target
-            and weakest_ally.current_target.health_points > 0
+            and weakest_ally.current_target.current_health_points > 0
         ):
             # If help ally mode, target the same enemy as the weakest ally
             self.current_target = weakest_ally.current_target
@@ -218,24 +220,6 @@ class Actor(Entity):
             f"* {self.name} took {total_damage} {damage.damage_type} damage and has {self.current_health_points} HP left."
         )
 
-    def add_modifier(
-        self, damage_modifier: Union[DamageModifier, List[DamageModifier]]
-    ):
-        if isinstance(damage_modifier, list):
-            self.modifier_manager.add_modifier(damage_modifier)
-        else:
-            self.modifier_manager.add_modifier([damage_modifier])
-        self.invalidate_cache()
-
-    def remove_modifier(
-        self, damage_modifier: Union[DamageModifier, List[DamageModifier]]
-    ):
-        if isinstance(damage_modifier, list):
-            self.modifier_manager.remove_modifier(damage_modifier)
-        else:
-            self.modifier_manager.remove_modifier([damage_modifier])
-        self.invalidate_cache()
-
     def add_item(self, item: Union[Item, List[Item]]):
         if isinstance(item, list):
             self.item_manager.add_item(item)
@@ -250,72 +234,36 @@ class Actor(Entity):
             self.item_manager.remove_item([item])
         self.invalidate_cache()
 
-    def add_trait(self, trait: Union[Trait, List[Trait]]):
-        if isinstance(trait, list):
-            for s in trait:
-                self.traits_manager.add_trait(s)
-        else:
-            self.traits_manager.add_trait(trait)
-        self.invalidate_cache()
-
-    def remove_trait(self, trait: Union[Trait, List[Trait]]):
-        if isinstance(trait, list):
-            for s in trait:
-                self.traits_manager.remove_trait(s)
-        else:
-            self.traits_manager.remove_trait(trait)
-        self.invalidate_cache()
-
-    def invalidate_cache(self):
-        self._cached_modifiers.clear()
-        self._cached_attributes = None
-
-    def calculate_attributes(self):
-        if self._cached_attributes is None:
-            # Initialize final attributes with a copy of base attributes
-            final_attributes = Attributes(**vars(self.base_attributes))
-
-            # Iterate over all fields in the Attributes dataclass
-            for item in self.item_manager.get_items():
-                final_attributes += item.attributes
-
-            self._cached_attributes = final_attributes
-
-        return self._cached_attributes
-
-    def aggregate_modifiers(
-        self, base_class: Type[DamageModifier]
-    ) -> List[DamageModifier]:
+    def get_attribute_sources(self):
         """
-        Aggregate all modifiers of a specific base class from items and modifiers.
+        Returns a list of all sources of attributes for this actor.
+        Includes base attributes, traits, and items.
         """
-        total_modifiers = []
-        for item in (
-            self.item_manager.get_items() + self.traits_manager.get_active_traits()
-        ):
-            for modifier in item.damage_modifiers:
-                if issubclass(type(modifier), base_class):
-                    total_modifiers.append(modifier)
-        total_modifiers.extend(
-            mod
-            for mod_list in self.modifier_manager.modifiers.values()
-            for mod in mod_list
-            if issubclass(type(mod), base_class)
-        )
-        return total_modifiers
+        # Start with the base attributes and traits (defined by Entity)
+        sources = super().get_attribute_sources()
 
-    def calculate_modifiers(
-        self, modifier_class: Type[DamageModifier]
-    ) -> List[DamageModifier]:
-        """
-        Retrieve cached modifiers of a specific class, populating cache if necessary.
-        """
+        # Add attributes from items
+        sources += [item.attributes for item in self.item_manager.get_items()]
 
-        if modifier_class not in self._cached_modifiers:
-            self._cached_modifiers[modifier_class] = self.aggregate_modifiers(
-                modifier_class
-            )
-        return self._cached_modifiers[modifier_class]
+        return sources
+
+    def get_modifier_sources(self) -> List[Union["Trait"]]:
+        """
+        Returns a list of all sources of modifiers for this actor.
+        Includes traits and items.
+        """
+        # Start with the trait sources
+        sources = (
+            self.traits_manager.get_active_traits()
+        )  # super().get_modifier_sources()
+        print("sources =", [source.name for source in sources])
+
+        # Add items as sources of modifiers
+        # for item in self.item_manager.get_items():
+        #     if item.traits:  # Check if the item has traits and they are not None
+        #         sources += item.traits
+
+        return sources
 
     def new_round(self):
         self.traits_manager.update_traits()
@@ -325,23 +273,12 @@ class Actor(Entity):
         self.help_count = 0
 
     @property
-    def attributes(self):
-        return self.calculate_attributes()
-
-    @property
     def prime_modifier(self) -> int:
         """
         Return the highest attribute value among Might, Agility, Intelligence, and Charisma.
         """
         return (
-            max(
-                [
-                    self.might,
-                    self.agility,
-                    self.intelligence,
-                    self.charisma,
-                ]
-            )
+            max([self.might, self.agility, self.intelligence, self.charisma])
             + self.prime_modifier_bonus
         )
 
@@ -362,18 +299,6 @@ class Actor(Entity):
         return (self.current_health_points < 0) & (
             self.current_health_points > self.attributes.death_threshold
         )
-
-    @property
-    def damage_modifiers(self) -> List["DamageModifier"]:
-        return self.calculate_modifiers(DamageModifier)
-
-    @property
-    def resistances(self) -> List["Resistance"]:
-        return self.calculate_modifiers(Resistance)
-
-    @property
-    def vulnerabilities(self) -> List["Vulnerability"]:
-        return self.calculate_modifiers(Vulnerability)
 
     def full_rest(self):
         """

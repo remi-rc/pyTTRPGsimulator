@@ -45,6 +45,7 @@ class Action(ABC):
             )
             return False
         if actor.current_mana_points < self.mana_points_cost:
+            print(actor.current_mana_points, self.mana_points_cost)
             logger.warning(
                 f"{actor.name} does not have enough mana points to perform this action."
             )

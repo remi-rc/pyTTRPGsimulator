@@ -39,11 +39,11 @@ class Entity:
     def attributes(self) -> List["Trait"]:
         return self.aggregate_attributes()
 
-    def add_trait(self, traits: Union[DamageModifier, List[DamageModifier]]):
+    def add_trait(self, traits: Union[Trait, List[Trait]]):
         self.traits_manager.add_trait(traits if traits is not None else [])
         self.invalidate_cache()
 
-    def remove_trait(self, traits: Union[DamageModifier, List[DamageModifier]]):
+    def remove_trait(self, traits: Union[Trait, List[Trait]]):
         self.traits_manager.remove_trait(traits if traits is not None else [])
         self.invalidate_cache()
 
@@ -54,27 +54,49 @@ class Entity:
         self._cached_modifiers.clear()
         self._cached_attributes = None
 
+    def get_attribute_sources(self):
+        """
+        Returns a list of all sources of attributes for this entity.
+        This method can be overridden by subclasses to include additional sources.
+        """
+        return [self.base_attributes] + [trait.attributes for trait in self.traits]
+
     def aggregate_attributes(self):
         if self._cached_attributes is None:
-            final_attributes = self.base_attributes
-            for trait in self.traits:
-                final_attributes += trait.attributes
+            final_attributes = Attributes()
+            for source in self.get_attribute_sources():
+                final_attributes += source
             self._cached_attributes = final_attributes
-            return final_attributes
-        else:
-            return self._cached_attributes
+        return self._cached_attributes
+
+    def get_modifier_sources(self) -> List[Union["DamageModifier"]]:
+        """
+        Returns a list of all sources of modifiers for this entity.
+        This method can be overridden by subclasses to include additional sources.
+        """
+        return self.traits_manager.get_active_traits()
 
     def aggregate_modifiers(
-        self, base_class: Type[DamageModifier]
-    ) -> List[DamageModifier]:
+        self, base_class: Type["DamageModifier"]
+    ) -> List["DamageModifier"]:
         """
-        Aggregate all modifiers of a specific base class from traits.
+        Aggregate all modifiers of a specific base class from the entity's sources.
         """
         total_modifiers = []
-        for trait in self.traits:
-            for modifier in trait.damage_modifiers:
+        print(
+            "self.traits_manager.get_active_traits() = ",
+            len(self.get_modifier_sources()),
+        )
+        print(
+            "self.traits_manager.get_active_traits() = ",
+            len(self.get_modifier_sources()),
+        )
+        for source in self.get_modifier_sources():
+
+            for modifier in source.damage_modifiers:
                 if issubclass(type(modifier), base_class):
                     total_modifiers.append(modifier)
+        print("total_modifiers = ", total_modifiers)
         return total_modifiers
 
     def calculate_modifiers(

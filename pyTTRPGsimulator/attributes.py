@@ -55,8 +55,8 @@ class Attributes:
     mastery_light_armor: bool = False
     mastery_heavy_armor: bool = False
 
-    has_magic_weapon = False
-    has_magic_armor = False
+    has_magic_weapon: bool = False
+    has_magic_armor: bool = False
 
     true_damage_on_new_turn = 0
 

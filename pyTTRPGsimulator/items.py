@@ -110,15 +110,6 @@ class Armor(Item):
             f"Mystical Damage Reduction: {self.attributes.mystical_damage_reduction}"
         )
 
-    def __repr__(self):
-        return (
-            f"Armor(name={self.name}, physical_defense={self.attributes.physical_defense}, "
-            f"mystical_defense={self.attributes.mystical_defense}, "
-            f"physical_damage_reduction={self.attributes.physical_damage_reduction}, "
-            f"mystical_damage_reduction={self.attributes.mystical_damage_reduction}, "
-            f"modifiers={self.damage_modifiers})"
-        )
-
 
 class Shield(Armor):
 
@@ -143,7 +134,6 @@ class Weapon(Item):
         weapon_styles: Optional[List["WeaponStyle"]] = None,
         **kwargs,
     ):
-        print("here", name, damages, weapon_range, traits, attributes)
 
         # Ensure damages is a list
         if damages is None:
