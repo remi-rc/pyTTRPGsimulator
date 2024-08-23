@@ -109,7 +109,7 @@ print("You should now have a 'game_logs.log' file containing the logs.")
 
 # %% We can also repeat the fight a high number of times to obtain statistics
 # We remove the logger
-"""
+
 rpg.setup_logging(logging.WARNING)
 
 N_combat = 5_000  # number of combats
@@ -124,21 +124,30 @@ print("Winrate of player characters = ", winrate_A)
 
 
 # %% Concluding remarks
-
+"""
 There are still many more things in the code that you could play with :
 
-1/ The first is the Strategy, which you can add to an actor to indicate
+1/ The first is the Combat Strategy, which you can add to an actor to indicate
 how they fight. This has dramatic consequences on the winrate. 
 The default strategy is kinda efficient already :)
+
 actor.strategy chosen between :
-    rpg.FullAttackStrategy(), rpg.DefaultStrategy(), rpg.HelpAllyStrategy()
+
+    rpg.FullAttackStrategy()
+    rpg.DefaultStrategy()
+    rpg.HelpAllyStrategy()
+    
     Try to change the strategies currently assigned to the actors, for 
     instance by making the bears and wolves more intelligent !
 
-2/ The second is closely related, and is the "target_mode" of an actor.
+2/ The second is closely related, and is the Targeting Strategy of an actor.
 Some actors favor the weakest foes, while some favor the strongest, etc.
-actor.target_mode chosen between :
-    "target_weakest" (default), "target_strongest", "random"
+actor.targeting_strategy chosen between :
+
+    rpg.TargetWeakestStrategy()
+    rpg.TargetHealthiestStrategy()
+    rpg.RandomTargetStrategy()
+    
 
 
 You should now be equipped to roughly evaluate the influence of items, 
