@@ -55,8 +55,7 @@ class Attributes:
     mastery_light_armor: bool = False
     mastery_heavy_armor: bool = False
 
-    has_magic_weapon: bool = False
-    has_magic_armor: bool = False
+    is_magic: bool = False
 
     true_damage_on_new_turn = 0
 
@@ -87,11 +86,18 @@ class Attributes:
         result = Attributes()
         for field in fields(self):
             field_name = field.name
-            setattr(
-                result,
-                field_name,
-                getattr(self, field_name) + getattr(other, field_name),
-            )
+            current_value = getattr(self, field_name)
+            other_value = getattr(other, field_name)
+
+            if isinstance(current_value, bool) and isinstance(other_value, bool):
+                # Use logical OR for boolean attributes
+                setattr(result, field_name, current_value or other_value)
+            elif isinstance(current_value, int) and isinstance(other_value, int):
+                # Use addition for integer attributes
+                setattr(result, field_name, current_value + other_value)
+            else:
+                raise TypeError(f"Unsupported type for field '{field_name}': {type(current_value)}")
+
         return result
 
 

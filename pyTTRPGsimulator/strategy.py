@@ -38,7 +38,7 @@ class DefaultStrategy(Strategy):
         enemies: List["Actor"],
     ) -> Action:
         # Calculate actions based on remaining action points and advantages
-        action_points = actor.action_points
+        action_points = actor.current_action_points
         attack_count = actor.attack_count
 
         # Always attack if you have not yet attacked, or if it's your last action (otherwise it is wasted)

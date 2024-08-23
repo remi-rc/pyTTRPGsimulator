@@ -218,7 +218,7 @@ class CombatManager:
 
         winning_team = "A" if any(actor.is_alive for actor in self.team_a) else "B"
         remaining_hp = {
-            actor.name: actor.health_points for actor in self.team_a + self.team_b
+            actor.name: actor.current_health_points for actor in self.team_a + self.team_b
         }
 
         num_rounds = self.rounds_count
@@ -245,8 +245,8 @@ class CombatManager:
             self.update_targeting(actor)
 
             while (
-                actor.action_points > 0
-                and actor.current_target.health_points > 0
+                actor.current_action_points > 0
+                and actor.current_target.current_health_points > 0
                 and not self.is_combat_over()
             ):
                 allies, enemies = self.get_allies_enemies(actor)
@@ -268,7 +268,7 @@ class CombatManager:
                     action.execute(actor)
 
                 # Reselect enemy if current enemy is dead
-                if actor.current_target.health_points <= 0:
+                if actor.current_target.current_health_points <= 0:
                     self.update_targeting(actor)
 
                 if self.is_combat_over():
@@ -281,8 +281,8 @@ class CombatManager:
         Returns:
             bool: True if the combat is over, False otherwise.
         """
-        team_a_alive = any(actor.health_points > 0 for actor in self.team_a)
-        team_b_alive = any(actor.health_points > 0 for actor in self.team_b)
+        team_a_alive = any(actor.current_health_points > 0 for actor in self.team_a)
+        team_b_alive = any(actor.current_health_points > 0 for actor in self.team_b)
         return not (team_a_alive and team_b_alive)
 
     def log_alive_actors(self):
@@ -295,7 +295,7 @@ class CombatManager:
         logger.info(f"Alive actors at round {self.rounds_count}:")
         for actor in alive_actors:
             logger.info(
-                f"    {actor.name}, HPs: {actor.health_points}/{actor.max_health_points}"
+                f"    {actor.name}, HPs: {actor.current_health_points}/{actor.max_health_points}"
             )
 
     def fight_debrief(self) -> str:
@@ -310,8 +310,8 @@ class CombatManager:
         team_enemies = self.team_b
 
         def actor_status(actor: Actor) -> str:
-            status = "Alive" if actor.health_points > 0 else "Dead"
-            return f"{actor.name} - {status}, HP: {actor.health_points}"
+            status = "Alive" if actor.current_health_points > 0 else "Dead"
+            return f"{actor.name} - {status}, HP: {actor.current_health_points}"
 
         debrief = ["Fight Debrief:"]
 

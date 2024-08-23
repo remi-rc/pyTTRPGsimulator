@@ -28,7 +28,7 @@ sword = rpg.MeleeWeapon(damages=[rpg.Damage(damage_type=rpg.Slashing(), value=1)
 board = rpg.Shield(physical_defense=2, physical_damage_reduction=1)
 
 Icarus = rpg.Actor(
-    health_points=8,
+    max_health_points=8,
     physical_defense=8,
     combat_mastery=1,
     Might=3,
@@ -38,7 +38,7 @@ Icarus = rpg.Actor(
 )
 
 Claudio = rpg.Actor(
-    health_points=8,
+    max_health_points=8,
     physical_defense=8,
     combat_mastery=1,
     Agility=3,
@@ -48,7 +48,7 @@ Claudio = rpg.Actor(
 )
 
 Sui = rpg.Actor(
-    health_points=8,
+    max_health_points=8,
     physical_defense=8,
     combat_mastery=1,
     Charisma=3,
@@ -62,7 +62,7 @@ claw_1 = rpg.MeleeWeapon(damages=[rpg.Damage(damage_type=rpg.Slashing(), value=1
 claw_2 = rpg.MeleeWeapon(damages=[rpg.Damage(damage_type=rpg.Slashing(), value=2)])
 
 Bear = rpg.Actor(
-    health_points=20,
+    max_health_points=20,
     physical_defense=11,
     Might=3,
     combat_mastery=1,
@@ -72,7 +72,7 @@ Bear = rpg.Actor(
 )
 
 Wolf_1 = rpg.Actor(
-    health_points=11,
+    max_health_points=11,
     physical_defense=11,
     Might=3,
     combat_mastery=1,
@@ -82,7 +82,7 @@ Wolf_1 = rpg.Actor(
 )
 
 Wolf_2 = rpg.Actor(
-    health_points=11,
+    max_health_points=11,
     physical_defense=11,
     Might=3,
     combat_mastery=1,

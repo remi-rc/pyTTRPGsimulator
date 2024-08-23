@@ -17,10 +17,6 @@ class Item(Entity):
     ):
         super().__init__(name=name, traits=traits, attributes=attributes, **kwargs)
 
-    @property
-    def is_magic(self):
-        return self.has_magic_weapon + self.has_magic_armor
-
     def __str__(self) -> str:
         # Extract and format resistances and vulnerabilities
         resistances = []
@@ -153,8 +149,9 @@ class Weapon(Item):
 
     def apply_styles(self, defender):
         bonus_damage_tot, bonus_hit_tot = 0, 0
+        print("defender : ", defender)
         for style in self.weapon_styles:
-            bonus_damage, bonus_hit = style.apply_effect(defender)
+            bonus_damage, bonus_hit = style.apply_effect(self=style, defender=defender)  # TODO : check why such call is required ?!
             bonus_damage_tot += bonus_damage
             bonus_hit_tot += bonus_hit
         return bonus_damage_tot, bonus_hit_tot

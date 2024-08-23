@@ -15,7 +15,7 @@ rpg.setup_logging(logging.WARNING)
 
 # %% Create a character: all stats have a default
 Remi = rpg.Actor(
-    health_points=8,
+    max_health_points=8,
     physical_defense=8,
     combat_mastery=1,
     might=3,
@@ -48,7 +48,7 @@ nice_shield = rpg.Shield(physical_defense=2, name="Penguin Bone Shield")
 fire_dmg = rpg.Damage(damage_type=rpg.Fire(), value=1)
 slashing_dmg = rpg.Damage(damage_type=rpg.Slashing(), value=1)
 epic_weapon = rpg.MeleeWeapon(
-    damages=[slashing_dmg, fire_dmg], name="My epic fire sword"
+    damages=[slashing_dmg, fire_dmg], name="My epic fire sword", is_magic=True
 )
 
 # Since it is a sword, we can add the sword style to it
@@ -56,35 +56,39 @@ epic_weapon.weapon_styles = [rpg.Sword_style()]
 
 
 # Maybe the weapon is enchanted, and provides a resistance to cold damage ? Resist X=1
-resist_cold = rpg.Resistance(damage_type=rpg.Cold(), value=1)
+resist_cold = rpg.Trait(damage_modifiers=rpg.Resistance(damage_type=rpg.Cold(), value=1), name="Resistance to Cold")
 
 # But maybe the weapon will also give vulnerability to fire damage ? Vulnerability Double
-vulnerability_fire = rpg.Vulnerability(
-    damage_type=rpg.Fire(), value=2, is_multiplicative=True
-)
+vulnerability_fire = rpg.Trait(damage_modifiers=rpg.Vulnerability(
+    damage_type=rpg.Fire(), value=2, is_multiplicative=True), name="Vulnerability to Fire")
+
 
 # We can now add these attributes to the weapon
-epic_weapon.add_modifier(resist_cold)
-epic_weapon.add_modifier(vulnerability_fire)
+epic_weapon.add_trait(resist_cold)
+epic_weapon.add_trait(vulnerability_fire)
 
 # ... and print to check some properties
 print(epic_weapon, "\n")
 
 
 # %% Finally, we can add the items to our hero :
+print("Remi.is_magic : ", Remi.is_magic)
+print("Remi.has_magic_weapon : ", Remi.has_magic_weapon)
 Remi.add_item([epic_armor, nice_shield, epic_weapon])
+print("Remi.is_magic : ", Remi.is_magic)
+print("Remi.has_magic_weapon : ", Remi.has_magic_weapon)
 
 # and we can print again to check the actor has updated :
-print(Remi)
+print(Remi.items)
 
 
 # %% Note that we can also create an actor directly equipped
 Remi = rpg.Actor(
-    health_points=8,
+    max_health_points=8,
     physical_defense=8,
     combat_mastery=1,
-    Might=3,
-    equipped_items=[epic_armor, nice_shield, epic_weapon],
+    might=3,
+    items=[epic_armor, nice_shield, epic_weapon],
     name="Remi",
 )
 

@@ -6,7 +6,7 @@ __pyTTRGsimulator__
 
 This code enables Dungeon Masters and players of table-top role player games (TTRPG) to simulate combats and predict the likelihood of a win, between two teams of "actors" (i.e., player characters, monsters). The code is quite general, but has been tailored to be used along the DC20 TTRPG. It has numerous features, some of them detailed below.
 
-1. Creation of items (armors, weapons).
+1. Creation of entities (actors and items (armors, weapons)).
 2. A damage system that can interact with resistance and vulnerabilities of actors.
 3. A logger than can detail actions taken during a fight to see what happened.
 4. A Strategy class, that details how an actor takes their actions.
@@ -21,25 +21,59 @@ Or directly download it.
 
 Add the library to your python path (system dependent)
 
-# Usage
+# Basic usage
 
 ```
 import pyTTRPGsimulator as rpg
 
-epic_armor = rpg.Armor(
-    physical_defense=2,
-    mystical_defense=1,
-    physical_damage_reduction=1,
-    mystical_damage_reduction=1,
-    name="Purple Dragon Hide",
-)
+# Create a basic sword
+sword_dmg = rpg.Damage(damage_type=rpg.Slashing(), 
+                        value=2)
+sword = rpg.Sword(name="Basic sword",
+        damages=sword_dmg)
 
+# Create some actors (PC and monster)
+actor_1 = rpg.Actor(name="Coach", items=sword)
+actor_2 = rpg.Actor(name="Penguin King", items=sword)
+
+# Initialize the combat manager
+combat_manager = rpg.CombatManager([actor_1], [actor_2], initiative_dc=10)
+
+# Run the combat
+combat_manager.run_combat()
+
+# Print the outcome
+print(combat_manager.fight_debrief())
+
+```
+
+# Advanced usage
+
+```
+import pyTTRPGsimulator as rpg
+
+# Create a complex magic item
+
+# Immunity to fire damage
+fire_immunity = rpg.Resistance(damage_type=rpg.Fire(), 
+                    value=0, is_multiplicative=True)
+
+# Use the Trait system to create complex features
+ring_trait = rpg.Trait(name="Epic Ring Trait",
+                    damage_modifiers=fire_immunity,
+                    initiative=2,   # bonus to initiative
+                    critical_hit_threshold=-1,  # crits on 19 and 20 !
+                    )
+# Instantiate the epic ring !
+epic_ring = rpg.Item(name="Ring of the Penguin King", traits=ring_trait)
+
+# Create a hero to wield this ring !
 Coach = rpg.Actor(
-    health_points=8,
+    max_health_points=8,
     physical_defense=8,
     combat_mastery=1,
     Might=3,
-    equipped_items=[epic_armor],
+    equipped_items=[epic_ring],
     name="Coach",
 )
 ```
@@ -51,11 +85,10 @@ See tutorials in the *tests* folder for more examples on how to run combats and 
 The code is far from being perfect, and currently has many limitations that I will be working on, with your help (see the How to Contribute section below).
 
 1. The code is tailored for fights between "sword and board" characters, without really accounting for range weapons or spells during combat (even though range weapons and spells are implemented within the code already).
-2. Reactions are not implemented yet.
+2. Reactions are not implemented yet. A "Trigger" class should be created to handle more generally the case when things happen upon certain events.
 3. An extension of the theater of the mind system to account for positioning would be a great addition to the gaming aspect of the simulator.
-4. A more general approach to buffing / debuffing actors with Traits is required, in order to ease the implementation of features that can change almost every aspect of the game mechanics. For instance, using the Impact weapon property, a Heavy Hit is increased by one. This cannot yet be implemented seemlessly, because the heavy hit bonus of 1 was hard coded.
-5. Examples and tutorials are still sparse.
-6. Commenting of the code should be improved, giving examples within class definitions for example.
+4. Examples and tutorials are still sparse.
+5. Commenting of the code should be improved, giving examples within class definitions for example.
 
 # How to Contribute
 

@@ -124,15 +124,15 @@ class Actor(Entity):
         if not candidates:
             return None
         if self.target_mode == "target_weakest":
-            return min(candidates, key=lambda enemy: enemy.health_points)
+            return min(candidates, key=lambda enemy: enemy.current_health_points)
         elif self.target_mode == "target_strongest":
-            return max(candidates, key=lambda enemy: enemy.health_points)
+            return max(candidates, key=lambda enemy: enemy.current_health_points)
         elif self.target_mode == "random":
             n = random.randint(0, len(candidates) - 1)
             return candidates[n]
         else:
             # Default to targeting the weakest
-            return min(candidates, key=lambda enemy: enemy.health_points)
+            return min(candidates, key=lambda enemy: enemy.current_health_points)
 
     def roll_initiative(self):
         roll = random.randint(1, 20)
@@ -292,13 +292,16 @@ class Actor(Entity):
         for item in self.item_manager.get_items():
             item.update_traits()
             
-    def new_round(self):
-        self.update_traits()
-        self.current_action_points = self.max_action_points
-        self.reset_attack_count()
-        self.reset_advantage_count()
-        self.help_count = 0
+    @property
+    def is_magic(self):
+        print("here test : ", self.base_attributes.is_magic)
+        return self.base_attributes.is_magic
 
+    @property
+    def has_magic_weapon(self):
+        """Returns True if any of the entity's weapons are magic; otherwise, False."""
+        return any(item.is_magic for item in self.weapons)
+    
     @property
     def prime_modifier(self) -> int:
         """
@@ -327,6 +330,25 @@ class Actor(Entity):
             self.current_health_points > self.attributes.death_threshold
         )
 
+    @property
+    def items(self):
+        return self.item_manager.get_items()
+    
+    def new_turn(self):
+        """Implement all actions to be undertaken at the begining of an actor's turn."""
+        self.is_full_dodging = False
+
+    def end_turn(self):
+        """Implement all actions to be undertaken at the end of an actor's turn."""
+        return
+    
+    def new_round(self):
+        self.update_traits()
+        self.current_action_points = self.max_action_points
+        self.reset_attack_count()
+        self.reset_advantage_count()
+        self.help_count = 0
+        
     def full_rest(self):
         """
         Restore all attributes to their maximum values, simulating a full rest.

@@ -20,7 +20,7 @@ class Axe_style(WeaponStyle):
         bonus_hit = 0
         bonus_damage = 0
         # Axe does +1 damage if the target is bleeding
-        if defender.attributes.is_bleeding:
+        if defender.is_bleeding:
             bonus_damage = 1
         return bonus_damage, bonus_hit
 
@@ -30,7 +30,7 @@ class Bow_style(WeaponStyle):
         bonus_hit = 0
         bonus_damage = 0
         # Bow does +1 damage if the target is slowed
-        if defender.attributes.is_slowed:
+        if defender.is_slowed:
             bonus_damage = 1
         return bonus_damage, bonus_hit
 
@@ -48,7 +48,7 @@ class Fist_style(WeaponStyle):
         bonus_hit = 0
         bonus_damage = 0
         # Fist does +1 damage if the target is grappled
-        if defender.attributes.is_grappled:
+        if defender.is_grappled:
             bonus_damage = 1
         return bonus_damage, bonus_hit
 
@@ -58,7 +58,7 @@ class Hammer_style(WeaponStyle):
         bonus_hit = 0
         bonus_damage = 0
         # Hammer does +1 damage if the target is dazed or petrified
-        if defender.attributes.is_dazed or defender.attributes.is_petrified:
+        if defender.is_dazed or defender.is_petrified:
             bonus_damage = 1
         return bonus_damage, bonus_hit
 
@@ -68,7 +68,7 @@ class Pick_style(WeaponStyle):
         bonus_hit = 0
         bonus_damage = 0
         # Pick does +1 damage if the target is impaired
-        if defender.attributes.is_impaired:
+        if defender.is_impaired:
             bonus_damage = 1
         return bonus_damage, bonus_hit
 
@@ -86,7 +86,7 @@ class Staff_style(WeaponStyle):
         bonus_hit = 0
         bonus_damage = 0
         # Staff does +1 damage if the target is hindered or petrified
-        if defender.attributes.is_hindered or defender.attributes.is_petrified:
+        if defender.is_hindered or defender.is_petrified:
             bonus_damage = 1
         return bonus_damage, bonus_hit
 
@@ -96,7 +96,7 @@ class Sword_style(WeaponStyle):
         bonus_hit = 0
         bonus_damage = 0
         # Sword does +1 damage if the target is exposed
-        if defender.attributes.is_exposed:
+        if defender.is_exposed:
             bonus_damage = 1
         return bonus_damage, bonus_hit
 

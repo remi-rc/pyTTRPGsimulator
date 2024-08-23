@@ -3,7 +3,7 @@ from typing import List, Optional, Union, Type
 from .modifiers import DamageModifier, Resistance, Vulnerability
 from .attributes import Attributes
 from .traits import Trait
-
+from dataclasses import fields, asdict
 
 class Entity:
     def __init__(
@@ -176,11 +176,25 @@ class Entity:
                 field,
                 property(
                     fget=lambda self, key=field: getattr(self.attributes, key),
+                    # Only the base attributes of an object are set
                     fset=lambda self, value, key=field: setattr(
-                        self.attributes, key, value
+                        self.base_attributes, key, value
                     ),
                 ),
             )
 
     def __str__(self):
-        return f"{self.name}: {self.attributes}"
+        non_standard_attributes = {}
+        default_attributes = asdict(Attributes())  # Get default attribute values as a dict
+
+        # Check each attribute and compare with the default
+        for field in fields(self.base_attributes):
+            current_value = getattr(self.base_attributes, field.name)
+            default_value = default_attributes[field.name]
+            if current_value != default_value:
+                non_standard_attributes[field.name] = current_value
+
+        # Create a string representation of non-standard attributes
+        attributes_str = ', '.join(f"{key}: {value}" for key, value in non_standard_attributes.items())
+        
+        return f"{self.name}: {attributes_str if attributes_str else 'No non-standard attributes'}"
