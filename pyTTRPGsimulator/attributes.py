@@ -114,6 +114,20 @@ actor_attributes = Attributes(
     move_speed=5,
     critical_hit_threshold=20,
     mastery_light_armor=True,
+)
+
+hero_attributes = Attributes(
+    physical_defense=8,
+    mystical_defense=8,
+    max_health_points=10,
+    max_action_points=4,
+    heavy_hit_damage=1,
+    brutal_hit_damage=1,
+    critical_hit_damage=2,
+    max_attack_before_penalty=1,
+    move_speed=5,
+    critical_hit_threshold=20,
+    mastery_light_armor=True,
     death_door_threshold=-3,
     death_door_action=1,
 )

@@ -33,7 +33,7 @@ Icarus = rpg.Actor(
     combat_mastery=1,
     might=3,
     items=[sword, board],
-    strategy=strategies[0],
+    combat_strategy=strategies[0],
     name="Icarus",
 )
 
@@ -43,7 +43,7 @@ Claudio = rpg.Actor(
     combat_mastery=1,
     agility=3,
     items=[sword, board],
-    strategy=strategies[0],
+    combat_strategy=strategies[0],
     name="Claudio",
 )
 
@@ -53,7 +53,7 @@ Sui = rpg.Actor(
     combat_mastery=1,
     charisma=3,
     items=[sword, board],
-    strategy=strategies[0],
+    combat_strategy=strategies[0],
     name="Sui",
 )
 
@@ -66,7 +66,7 @@ Bear = rpg.Actor(
     physical_defense=11,
     might=3,
     combat_mastery=1,
-    strategy=strategies[3],
+    combat_strategy=strategies[3],
     name="Bear",
     items=[claw_2],
 )
@@ -76,7 +76,7 @@ Wolf_1 = rpg.Actor(
     physical_defense=11,
     might=3,
     combat_mastery=1,
-    strategy=strategies[3],
+    combat_strategy=strategies[3],
     name="Wolf 1",
     items=[claw_1],
 )
@@ -86,7 +86,7 @@ Wolf_2 = rpg.Actor(
     physical_defense=11,
     might=3,
     combat_mastery=1,
-    strategy=strategies[3],
+    combat_strategy=strategies[3],
     name="Wolf 2",
     items=[claw_1],
 )
@@ -109,6 +109,7 @@ print("You should now have a 'game_logs.log' file containing the logs.")
 
 # %% We can also repeat the fight a high number of times to obtain statistics
 # We remove the logger
+"""
 rpg.setup_logging(logging.WARNING)
 
 N_combat = 5_000  # number of combats
@@ -123,7 +124,7 @@ print("Winrate of player characters = ", winrate_A)
 
 
 # %% Concluding remarks
-"""
+
 There are still many more things in the code that you could play with :
 
 1/ The first is the Strategy, which you can add to an actor to indicate

@@ -139,16 +139,6 @@ class CombatManager:
 
         return allies, enemies
 
-    def update_targeting(self, actor):
-        """
-        Update the target of a given actor based on current allies and enemies.
-
-        Parameters:
-            actor (Actor): The actor whose targeting needs to be updated.
-        """
-        allies, enemies = self.get_allies_enemies(actor)
-        actor.update_targeting(allies, enemies)
-
     def next_turn_actor(self):
         """
         Get the next actor to take a turn in the combat.
@@ -241,9 +231,7 @@ class CombatManager:
         logger.info(f"{actor.name}'s turn:")
 
         if actor.is_dead:
-            logger.info(
-                f"{actor.name} is at Death's doors and does nothing this turn !"
-            )
+            logger.info(f"{actor.name} is dead !")
 
         else:
 
@@ -253,34 +241,34 @@ class CombatManager:
                 )
                 actor.current_action_points = actor.death_door_action
 
-            self.update_targeting(actor)
+            # Time to update the target of the actor
+            # To simplify, only enemies are targetable
+            allies, enemies = self.get_allies_enemies(actor)
+            actor.update_targeting(allies, enemies)
 
             while (
                 actor.current_action_points > 0
                 and actor.current_target.current_health_points > 0
                 and not self.is_combat_over()
             ):
+
+                # Always attempt to re-actualize targeting (dead enemy for instance)
                 allies, enemies = self.get_allies_enemies(actor)
+                actor.update_targeting(allies, enemies)
 
-                # Reselect enemy if current target is an ally (because of Help action or Healing)
-                if actor.current_target in allies:
-                    self.update_targeting(actor)
-
-                action = actor.strategy.choose_action(actor, allies, enemies)
-                if isinstance(action, GainAdvantage):
-                    action.execute(actor)
-                elif isinstance(action, Attack):
-                    action.execute(actor, actor.current_target)
-                elif isinstance(action, Help):
-                    action.execute(actor, actor.current_target)
-                elif isinstance(action, Dodge):
-                    action.execute(actor)
-                elif isinstance(action, Full_Dodge):
-                    action.execute(actor)
-
-                # Reselect enemy if current enemy is dead
-                if actor.current_target.current_health_points <= 0:
-                    self.update_targeting(actor)
+                # The previous targeting could have cost an AP
+                if actor.current_action_points > 0:
+                    action = actor.combat_strategy.choose_action(actor, allies, enemies)
+                    if isinstance(action, GainAdvantage):
+                        action.execute(actor)
+                    elif isinstance(action, Attack):
+                        action.execute(actor, actor.current_target)
+                    elif isinstance(action, Help):
+                        action.execute(actor, actor.current_target)
+                    elif isinstance(action, Dodge):
+                        action.execute(actor)
+                    elif isinstance(action, Full_Dodge):
+                        action.execute(actor)
 
                 if self.is_combat_over():
                     return
@@ -303,7 +291,8 @@ class CombatManager:
         alive_actors = [actor for actor in self.team_a + self.team_b if actor.is_alive]
         logger.info(f"")
         logger.info(f"################ NEW ROUND ################")
-        logger.info(f"Alive actors at round {self.rounds_count}:")
+        # +1 to start at 1 (python starts at 0)
+        logger.info(f"Alive actors at round {self.rounds_count + 1}:")
         for actor in alive_actors:
             logger.info(
                 f"    {actor.name}, HPs: {actor.current_health_points}/{actor.max_health_points}"

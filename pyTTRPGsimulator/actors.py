@@ -1,15 +1,14 @@
 import logging
 from typing import List, Optional, Type, Dict, Union
-from dataclasses import dataclass, fields
-import math
 import random
 
 from .items import Item, Armor, Weapon, ItemManager
 from .damages import Damage, Physical
-from .modifiers import DamageModifier, ModifierManager, Resistance, Vulnerability
+from .modifiers import DamageModifier
 from .combat_strategies import DefaultStrategy
+from .targeting_strategies import TargetWeakestStrategy
 from .attributes import Attributes, actor_attributes
-from .traits import Trait, TraitsManager
+from .traits import Trait
 from .entity import Entity
 
 # Set up logging
@@ -24,9 +23,9 @@ class Actor(Entity):
         self,
         name: str = "",
         items: Optional[List["Item"]] = None,
-        traits: Optional[Union[Trait, List[Trait]]] = None,
+        traits: Optional[Union["Trait", List["Trait"]]] = None,
         attributes: "Attributes" = None,
-        targeting_strategy: str = "target_weakest",
+        targeting_strategy=TargetWeakestStrategy(),
         combat_strategy=DefaultStrategy(),
         **kwargs,  # Check the Attributes class to know these additional arguments
     ):
@@ -40,10 +39,11 @@ class Actor(Entity):
         self.item_manager.add_item(items if items is not None else [])
 
         # Combat-related properties
-        self.strategy = combat_strategy
+        self.combat_strategy = combat_strategy
         self.current_target: Optional["Actor"] = None
+        # TODO : Not sure how to best implement the targeting enemies dynamically
         self.targeting_enemies: List["Actor"] = []
-        self.target_mode = target_mode
+        self.targeting_strategy = targeting_strategy
         self.attack_count = 0  # Track the number of attacks in the current turn
         self.advantage_count = 0  # Track the number of advantages gained
         self.one_time_hit_bonus = 0  # A bonus from help action
@@ -73,66 +73,7 @@ class Actor(Entity):
         """
         Update the current target of the actor based on the given allies and enemies.
         """
-        # Check if current target is dead
-        if self.current_target and self.current_target.current_health_points <= 0:
-            self.current_target = None
-
-        # Remove target if allied actor (because of Help, Heal, Mind Control, etc)
-        if self.current_target in team_allies:
-            self.current_target = None
-
-        # Filter out dead enemies
-        alive_enemies = [
-            enemy for enemy in team_enemies if enemy.current_health_points > 0
-        ]
-
-        # Determine enemies targeting this actor
-        enemies_targeting_me = [
-            enemy for enemy in self.targeting_enemies if enemy.current_target == self
-        ]
-
-        # Determine the weakest ally who is still alive
-        alive_allies = [ally for ally in team_allies if ally.current_health_points > 0]
-        weakest_ally = min(
-            alive_allies, key=lambda ally: ally.current_health_points, default=None
-        )
-
-        if enemies_targeting_me:
-            # If there are enemies targeting this actor, select among them based on target_mode
-            self.current_target = self.select_target(enemies_targeting_me)
-        elif (
-            self.target_mode == "help_ally"
-            and weakest_ally
-            and weakest_ally.current_target
-            and weakest_ally.current_target.current_health_points > 0
-        ):
-            # If help ally mode, target the same enemy as the weakest ally
-            self.current_target = weakest_ally.current_target
-        else:
-            # Select freely among all alive enemies
-            self.current_target = self.select_target(alive_enemies)
-
-        if self.current_target:
-            logger.info(f"{self.name} is now targeting {self.current_target.name}")
-
-    def select_target(self, candidates: List["Actor"]) -> Optional["Actor"]:
-        """
-        Select a target from the given candidates based on the target mode.
-
-        TODO: should target mode be a class ?
-        """
-        if not candidates:
-            return None
-        if self.target_mode == "target_weakest":
-            return min(candidates, key=lambda enemy: enemy.current_health_points)
-        elif self.target_mode == "target_strongest":
-            return max(candidates, key=lambda enemy: enemy.current_health_points)
-        elif self.target_mode == "random":
-            n = random.randint(0, len(candidates) - 1)
-            return candidates[n]
-        else:
-            # Default to targeting the weakest
-            return min(candidates, key=lambda enemy: enemy.current_health_points)
+        self.targeting_strategy.select_target(self, team_allies, team_enemies)
 
     def roll_initiative(self):
         roll = random.randint(1, 20)
@@ -220,18 +161,20 @@ class Actor(Entity):
             calculated_damage = self.calculate_damage_taken(damage)
             total_damage += calculated_damage
             damage_report.append(
-                f"   - {calculated_damage} {damage.damage_type} damage"
+                f"            * {calculated_damage} {damage.damage_type} damage"
             )
 
         self.current_health_points -= total_damage
 
         # Log the detailed damage report
-        logger.info(f"* {self.name} took {total_damage} total damage:")
+        logger.info(f"        * {self.name} took {total_damage} total damage:")
         for report in damage_report:
             logger.info(report)
 
         # Log the remaining health points
-        logger.info(f"* {self.name} now has {self.current_health_points} HP left.")
+        logger.info(
+            f"        * {self.name} now has {self.current_health_points} HP left."
+        )
 
     def add_item(self, item: Union[Item, List[Item]]):
         if isinstance(item, list):

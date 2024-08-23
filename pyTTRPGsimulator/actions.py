@@ -86,9 +86,8 @@ class GainAdvantage(Action):
             return
 
         source.advantage_count += 1
-        logger.info(
-            f"{source.name} gains advantage. Advantage count is now {source.advantage_count}."
-        )
+        logger.info(f"{source.name} gains advantage. ({self.action_points_cost}AP)")
+        logger.info(f"    * Advantage count is now {source.advantage_count}.")
 
 
 class Attack(Action):
@@ -154,8 +153,12 @@ class Attack(Action):
         bonus_dmg_ws, bonus_hit_ws = weapon.apply_styles(target)
         attack_tot_target = attack_tot + bonus_hit_ws
 
+        logger.info(
+            f"{source.name} attacks {target.name} ! ({self.action_points_cost}AP)"
+        )
+
         if attack_tot_target >= target.physical_defense or is_critical_hit:
-            logger.info(f"{source.name}'s attack hits {target.name}.")
+            logger.info(f"    {source.name}'s attack hits {target.name}.")
 
             # TODO : handle brutal and heavy hit correctly
             damage_bonus = int((attack_tot_target - target.physical_defense) // 5)
@@ -179,7 +182,7 @@ class Attack(Action):
                     ]
                 )
         else:
-            logger.info(f"{source.name}'s attack missed {target.name}.")
+            logger.info(f"    {source.name}'s attack missed {target.name}.")
 
 
 class InflictDamage(Action):
@@ -234,7 +237,9 @@ class Target(Action):
             return
 
         source.current_target = target
-        logger.info(f"{source.name} now targets {target.name}.")
+        logger.info(
+            f"{source.name} now targets {target.name} ({self.action_points_cost}AP)."
+        )
 
 
 class MoveToTarget(Action):
@@ -258,7 +263,9 @@ class MoveToTarget(Action):
             return
 
         source.current_target = target
-        logger.info(f"{source.name} moves to reach {target.name} (1 AP).")
+        logger.info(
+            f"{source.name} moves to reach {target.name} ({self.action_points_cost}AP)."
+        )
 
 
 class Disengage(Action):
@@ -303,7 +310,9 @@ class Dodge(Action):
             return
 
         target.is_dodging = True
-        logger.info(f"{source.name} prepares to dodge the next attack.")
+        logger.info(
+            f"{source.name} prepares to dodge the next attack. ({self.action_points_cost}AP)"
+        )
 
 
 class Full_Dodge(Action):
@@ -325,7 +334,9 @@ class Full_Dodge(Action):
             return
 
         target.is_full_dodging = True
-        logger.info(f"{source.name} prepares to dodge all the attacks.")
+        logger.info(
+            f"{source.name} prepares to dodge all the attacks.  ({self.action_points_cost}AP)"
+        )
 
 
 class Grapple(Action):
@@ -378,7 +389,9 @@ class Help(Action):
         source.help_count += 1
 
         target.one_time_hit_bonus += bonus
-        logger.info(f"{source.name} helps {target.name}")
+        logger.info(
+            f"{source.name} helps {target.name}.  ({self.action_points_cost}AP)"
+        )
 
 
 class ImposeTrait(Action):
