@@ -62,13 +62,13 @@ class Action(ABC):
         return True
 
     @abstractmethod
-    def execute(self, source: "Actor", targets: List["Actor"] = None, *args, **kwargs):
+    def execute(self, source: "Actor", target: "Actor" = None, *args, **kwargs):
         """
         Executes the action. Must be implemented by subclasses.
 
         Parameters:
             source (Actor): The actor performing the action.
-            targets (List[Actor], optional): The targets of the action.
+            target (List[Actor], optional): The target of the action.
         """
         pass
 
@@ -81,7 +81,7 @@ class GainAdvantage(Action):
     def __init__(self, action_points_cost: int = 1):
         super().__init__(action_points_cost=action_points_cost)
 
-    def execute(self, source: "Actor", targets: List["Actor"] = None):
+    def execute(self, source: "Actor", target: "Actor" = None):
         if not self._apply_costs(source):
             return
 
@@ -215,59 +215,50 @@ class InflictDamage(Action):
 
 class Target(Action):
     """
-    Action to target another actor.
-
-    Not fully implemented and integrated with the rest of the code.
-
-    # TODO : Maybe Target should be handled not by an Action...
-    """
-
-    def __init__(
-        self,
-        action_points_cost: int = 1,
-        mana_points_cost: int = 0,
-        stamina_points_cost: int = 0,
-    ):
-        super().__init__(action_points_cost, mana_points_cost, stamina_points_cost)
-
-    def execute(self, source: "Actor", target: "Actor"):
-        if target == source.current_target:
-            return
-
-        # It is free for a source to target an actor that is targeting the source
-        if target.current_target == source:
-            self.action_points_cost = 0
-        # elif source.equipped_weapon and isinstance(source.equipped_weapon, RangeWeapon):  # TODO : implement weapon switch system
-
-        # Since the cost can change, the check is made last
-        if not self._apply_costs(source):
-            return
-        logger.info(f"{source.name} targets {target.name}")
-
-
-class Move(Action):
-    """
-    Action to move in a given direction.
+    Action to target.
 
     Not fully implemented and integrated with the rest of the code.
     """
 
     def __init__(
         self,
-        direction: str,
-        action_points_cost: int = 1,
+        action_points_cost: int = 0,
         mana_points_cost: int = 0,
         stamina_points_cost: int = 0,
     ):
         super().__init__(action_points_cost, mana_points_cost, stamina_points_cost)
-        self.direction = direction
 
     def execute(self, source: "Actor", target: Optional["Actor"] = None):
         target = source if target is None else target
         if not self._apply_costs(source):
             return
 
-        logger.info(f"{source.name} moves {self.direction}")
+        source.current_target = target
+        logger.info(f"{source.name} now targets {target.name}.")
+
+
+class MoveToTarget(Action):
+    """
+    Action to move toward a target.
+
+    Not fully implemented and integrated with the rest of the code.
+    """
+
+    def __init__(
+        self,
+        action_points_cost: int = 1,
+        mana_points_cost: int = 0,
+        stamina_points_cost: int = 0,
+    ):
+        super().__init__(action_points_cost, mana_points_cost, stamina_points_cost)
+
+    def execute(self, source: "Actor", target: Optional["Actor"] = None):
+        target = source if target is None else target
+        if not self._apply_costs(source):
+            return
+
+        source.current_target = target
+        logger.info(f"{source.name} moves to reach {target.name} (1 AP).")
 
 
 class Disengage(Action):

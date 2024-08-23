@@ -7,7 +7,7 @@ import random
 from .items import Item, Armor, Weapon, ItemManager
 from .damages import Damage, Physical
 from .modifiers import DamageModifier, ModifierManager, Resistance, Vulnerability
-from .strategy import DefaultStrategy
+from .combat_strategies import DefaultStrategy
 from .attributes import Attributes, actor_attributes
 from .traits import Trait, TraitsManager
 from .entity import Entity
@@ -26,8 +26,8 @@ class Actor(Entity):
         items: Optional[List["Item"]] = None,
         traits: Optional[Union[Trait, List[Trait]]] = None,
         attributes: "Attributes" = None,
-        target_mode: str = "target_weakest",
-        strategy=DefaultStrategy(),
+        targeting_strategy: str = "target_weakest",
+        combat_strategy=DefaultStrategy(),
         **kwargs,  # Check the Attributes class to know these additional arguments
     ):
 
@@ -40,7 +40,7 @@ class Actor(Entity):
         self.item_manager.add_item(items if items is not None else [])
 
         # Combat-related properties
-        self.strategy = strategy
+        self.strategy = combat_strategy
         self.current_target: Optional["Actor"] = None
         self.targeting_enemies: List["Actor"] = []
         self.target_mode = target_mode
@@ -315,13 +315,17 @@ class Actor(Entity):
 
     @property
     def is_alive(self) -> bool:
-        return self.current_health_points > 0
+        return self.current_health_points > self.death_door_threshold
 
     @property
     def is_at_death_door(self) -> bool:
         return (self.current_health_points < 0) & (
-            self.current_health_points > self.attributes.death_threshold
+            self.current_health_points > self.death_door_threshold
         )
+
+    @property
+    def is_dead(self) -> bool:
+        return not self.is_alive
 
     @property
     def items(self):

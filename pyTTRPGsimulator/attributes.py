@@ -50,7 +50,8 @@ class Attributes:
     critical_hit_threshold: int = 0  # negative value to reduce the threshold
     heavy_hit_damage: int = 0
     brutal_hit_damage: int = 0
-    death_threshold: int = 0
+    death_door_threshold: int = 0
+    death_door_action: int = 0
 
     mastery_light_armor: bool = False
     mastery_heavy_armor: bool = False
@@ -113,4 +114,6 @@ actor_attributes = Attributes(
     move_speed=5,
     critical_hit_threshold=20,
     mastery_light_armor=True,
+    death_door_threshold=-3,
+    death_door_action=1,
 )

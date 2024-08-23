@@ -7,8 +7,13 @@ import random
 if TYPE_CHECKING:
     from .actors import Actor
 
+attack_action = Attack()
+help_action = Help()
+full_dodge_action = Full_Dodge()
+gain_advantage_action = GainAdvantage()
 
-class Strategy(ABC):
+
+class CombatStrategy(ABC):
     @abstractmethod
     def choose_action(
         self,
@@ -19,7 +24,7 @@ class Strategy(ABC):
         pass
 
 
-class FullAttackStrategy(Strategy):
+class FullAttackStrategy(CombatStrategy):
     def choose_action(
         self,
         actor: "Actor",
@@ -27,10 +32,10 @@ class FullAttackStrategy(Strategy):
         enemies: List["Actor"],
     ) -> Action:
         # Basic strategy example: always attack
-        return Attack()
+        return attack_action
 
 
-class DefaultStrategy(Strategy):
+class DefaultStrategy(CombatStrategy):
     def choose_action(
         self,
         actor: "Actor",
@@ -43,15 +48,15 @@ class DefaultStrategy(Strategy):
 
         # Always attack if you have not yet attacked, or if it's your last action (otherwise it is wasted)
         if (attack_count == 0) or (action_points == 1):
-            return Attack()
+            return attack_action
         # If you counter your stacking disadvantage, attack
         if actor.advantage_count >= attack_count:
-            return Attack()
+            return attack_action
         else:
-            return GainAdvantage()
+            return gain_advantage_action
 
 
-class DefaultDodgeStrategy(Strategy):
+class DefaultDodgeStrategy(CombatStrategy):
     def choose_action(
         self,
         actor: "Actor",
@@ -64,18 +69,18 @@ class DefaultDodgeStrategy(Strategy):
 
         # If this actor is targeted by enemies, the full dodge action is taken
         if actor.targeting_enemies and not actor.is_full_dodging:
-            return Full_Dodge()
+            return full_dodge_action
         # Always attack if you have not yet attacked, or if it's your last action (otherwise it is wasted)
         if (attack_count == 0) or (action_points == 1):
-            return Attack()
+            return attack_action
         # If you counter your stacking disadvantage, attack
         if actor.advantage_count >= attack_count:
-            return Attack()
+            return attack_action
         else:
-            return GainAdvantage()
+            return gain_advantage_action
 
 
-class HelpAllyStrategy(Strategy):
+class HelpAllyStrategy(CombatStrategy):
     def choose_action(
         self,
         actor: "Actor",
@@ -109,13 +114,13 @@ class HelpAllyStrategy(Strategy):
             if unhelped_nearby_allies:
                 ally_to_help = random.choice(unhelped_nearby_allies)
                 actor.current_target = ally_to_help
-                return Help()
+                return help_action
 
         # Always attack if you have not yet attacked, or if it's your last action (otherwise it is wasted)
         if (attack_count == 0) or (action_points == 1):
-            return Attack()
+            return attack_action
         # If you counter your stacking disadvantage, attack
         if actor.advantage_count >= attack_count:
-            return Attack()
+            return attack_action
         else:
-            return GainAdvantage()
+            return gain_advantage_action

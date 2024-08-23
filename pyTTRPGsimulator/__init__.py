@@ -40,4 +40,5 @@ from .weapon_styles import *
 from .actions import *
 from .combat import *
 from .spells import *
-from .strategy import *
+from .combat_strategies import *
+from .targeting_strategies import *

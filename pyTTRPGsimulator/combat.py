@@ -119,13 +119,13 @@ class CombatManager:
 
     def get_allies_enemies(self, actor):
         """
-        Get the allies and enemies of a given actor.
+        Get the alive allies and enemies of a given actor.
 
         Parameters:
             actor (Actor): The actor for whom to find allies and enemies.
 
         Returns:
-            tuple: A tuple containing two lists - allies and enemies.
+            tuple: A tuple containing two lists - alive allies and alive enemies.
         """
         if actor.is_team_A:
             allies = self.team_a
@@ -133,6 +133,10 @@ class CombatManager:
         else:
             allies = self.team_b
             enemies = self.team_a
+
+        allies = [ally for ally in allies if ally.is_alive]
+        enemies = [enemy for enemy in enemies if enemy.is_alive]
+
         return allies, enemies
 
     def update_targeting(self, actor):
@@ -236,12 +240,18 @@ class CombatManager:
         logger.info(f"")
         logger.info(f"{actor.name}'s turn:")
 
-        if not actor.is_alive:
+        if actor.is_dead:
             logger.info(
                 f"{actor.name} is at Death's doors and does nothing this turn !"
             )
 
         else:
+
+            if actor.is_at_death_door:
+                logger.info(
+                    f"{actor.name} is at Death's doors has only {actor.death_door_action} AP !"
+                )
+                actor.current_action_points = actor.death_door_action
 
             self.update_targeting(actor)
 
