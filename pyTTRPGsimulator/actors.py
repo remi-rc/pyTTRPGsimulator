@@ -24,7 +24,7 @@ class Actor(Entity):
         self,
         name: str = "",
         items: Optional[List["Item"]] = None,
-        traits: Optional[List["Trait"]] = None,
+        traits: Optional[Union[Trait, List[Trait]]] = None,
         attributes: "Attributes" = None,
         target_mode: str = "target_weakest",
         strategy=DefaultStrategy(),
@@ -211,13 +211,28 @@ class Actor(Entity):
     def take_damage(self, damages: List["Damage"]):
         """
         Apply a list of damages to the actor, updating health points accordingly.
+        Log each type of damage separately in a detailed and structured way.
         """
         total_damage = 0
+        damage_report = []
+
         for damage in damages:
-            total_damage += self.calculate_damage_taken(damage)
+            calculated_damage = self.calculate_damage_taken(damage)
+            total_damage += calculated_damage
+            damage_report.append(
+                f"   - {calculated_damage} {damage.damage_type} damage"
+            )
+
         self.current_health_points -= total_damage
+
+        # Log the detailed damage report
+        logger.info(f"* {self.name} took {total_damage} total damage:")
+        for report in damage_report:
+            logger.info(report)
+
+        # Log the remaining health points
         logger.info(
-            f"* {self.name} took {total_damage} {damage.damage_type} damage and has {self.current_health_points} HP left."
+            f"* {self.name} now has {self.current_health_points} HP left."
         )
 
     def add_item(self, item: Union[Item, List[Item]]):
@@ -247,26 +262,38 @@ class Actor(Entity):
 
         return sources
 
-    def get_modifier_sources(self) -> List[Union["Trait"]]:
+    def get_trait_sources(self):
         """
-        Returns a list of all sources of modifiers for this actor.
-        Includes traits and items.
+        Returns a list of all sources of traits for this entity.
+        This method can be overridden by subclasses to include additional sources.
         """
-        # Start with the trait sources
-        sources = (
-            self.traits_manager.get_active_traits()
-        )  # super().get_modifier_sources()
-        print("sources =", [source.name for source in sources])
+        # Start with the base traits (defined by Entity)
+        traits = list(super().get_trait_sources())
 
-        # Add items as sources of modifiers
-        # for item in self.item_manager.get_items():
-        #     if item.traits:  # Check if the item has traits and they are not None
-        #         sources += item.traits
+        # Create a set to track seen traits and avoid duplicates
+        seen_traits = {id(trait): trait for trait in traits}
 
-        return sources
+        # Add traits from items, avoiding duplicates
+        for item in self.item_manager.get_items():
+            if item.traits:
+                for trait in item.traits:
+                    if id(trait) not in seen_traits:
+                        traits.append(trait)
+                        seen_traits[id(trait)] = trait
 
+        return traits
+
+    def update_traits(self):
+        """
+        Decrement the duration of each trait. If a trait expires (duration <= 0),
+        remove it from the entity it is attached to and invalidate the entity's attribute cache.
+        """
+        super().update_traits()
+        for item in self.item_manager.get_items():
+            item.update_traits()
+            
     def new_round(self):
-        self.traits_manager.update_traits()
+        self.update_traits()
         self.current_action_points = self.max_action_points
         self.reset_attack_count()
         self.reset_advantage_count()

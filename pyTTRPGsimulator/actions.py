@@ -145,7 +145,11 @@ class Attack(Action):
 
             # Apply weapon styles and calculate total attack roll for the target
             # Assumes the actor uses the first weapon in their inventory
-            weapon = source.weapons[0]
+            if source.weapons:
+                weapon = source.weapons[0]
+            else:
+                raise ValueError(f"{source.name} has no weapon equipped!")
+            
             bonus_dmg_ws, bonus_hit_ws = weapon.apply_styles(target)
             attack_tot_target = attack_tot + bonus_hit_ws
 
