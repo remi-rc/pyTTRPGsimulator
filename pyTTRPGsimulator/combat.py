@@ -218,7 +218,8 @@ class CombatManager:
 
         winning_team = "A" if any(actor.is_alive for actor in self.team_a) else "B"
         remaining_hp = {
-            actor.name: actor.current_health_points for actor in self.team_a + self.team_b
+            actor.name: actor.current_health_points
+            for actor in self.team_a + self.team_b
         }
 
         num_rounds = self.rounds_count
@@ -259,9 +260,9 @@ class CombatManager:
                 if isinstance(action, GainAdvantage):
                     action.execute(actor)
                 elif isinstance(action, Attack):
-                    action.execute(actor, [actor.current_target])
+                    action.execute(actor, actor.current_target)
                 elif isinstance(action, Help):
-                    action.execute(actor, [actor.current_target])
+                    action.execute(actor, actor.current_target)
                 elif isinstance(action, Dodge):
                     action.execute(actor)
                 elif isinstance(action, Full_Dodge):

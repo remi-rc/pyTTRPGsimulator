@@ -31,9 +31,9 @@ Icarus = rpg.Actor(
     max_health_points=8,
     physical_defense=8,
     combat_mastery=1,
-    Might=3,
-    equipped_items=[sword, board],
-    strategy=strategies[1],
+    might=3,
+    items=[sword, board],
+    strategy=strategies[0],
     name="Icarus",
 )
 
@@ -41,9 +41,9 @@ Claudio = rpg.Actor(
     max_health_points=8,
     physical_defense=8,
     combat_mastery=1,
-    Agility=3,
-    equipped_items=[sword, board],
-    strategy=strategies[1],
+    agility=3,
+    items=[sword, board],
+    strategy=strategies[0],
     name="Claudio",
 )
 
@@ -51,9 +51,9 @@ Sui = rpg.Actor(
     max_health_points=8,
     physical_defense=8,
     combat_mastery=1,
-    Charisma=3,
-    equipped_items=[sword, board],
-    strategy=strategies[1],
+    charisma=3,
+    items=[sword, board],
+    strategy=strategies[0],
     name="Sui",
 )
 
@@ -64,31 +64,31 @@ claw_2 = rpg.MeleeWeapon(damages=[rpg.Damage(damage_type=rpg.Slashing(), value=2
 Bear = rpg.Actor(
     max_health_points=20,
     physical_defense=11,
-    Might=3,
+    might=3,
     combat_mastery=1,
     strategy=strategies[3],
     name="Bear",
-    equipped_items=[claw_2],
+    items=[claw_2],
 )
 
 Wolf_1 = rpg.Actor(
     max_health_points=11,
     physical_defense=11,
-    Might=3,
+    might=3,
     combat_mastery=1,
     strategy=strategies[3],
     name="Wolf 1",
-    equipped_items=[claw_1],
+    items=[claw_1],
 )
 
 Wolf_2 = rpg.Actor(
     max_health_points=11,
     physical_defense=11,
-    Might=3,
+    might=3,
     combat_mastery=1,
     strategy=strategies[3],
     name="Wolf 2",
-    equipped_items=[claw_1],
+    items=[claw_1],
 )
 
 # %% We can now have them fight !

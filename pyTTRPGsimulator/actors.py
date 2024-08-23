@@ -231,9 +231,7 @@ class Actor(Entity):
             logger.info(report)
 
         # Log the remaining health points
-        logger.info(
-            f"* {self.name} now has {self.current_health_points} HP left."
-        )
+        logger.info(f"* {self.name} now has {self.current_health_points} HP left.")
 
     def add_item(self, item: Union[Item, List[Item]]):
         if isinstance(item, list):
@@ -291,17 +289,12 @@ class Actor(Entity):
         super().update_traits()
         for item in self.item_manager.get_items():
             item.update_traits()
-            
-    @property
-    def is_magic(self):
-        print("here test : ", self.base_attributes.is_magic)
-        return self.base_attributes.is_magic
 
     @property
     def has_magic_weapon(self):
         """Returns True if any of the entity's weapons are magic; otherwise, False."""
         return any(item.is_magic for item in self.weapons)
-    
+
     @property
     def prime_modifier(self) -> int:
         """
@@ -333,7 +326,7 @@ class Actor(Entity):
     @property
     def items(self):
         return self.item_manager.get_items()
-    
+
     def new_turn(self):
         """Implement all actions to be undertaken at the begining of an actor's turn."""
         self.is_full_dodging = False
@@ -341,14 +334,14 @@ class Actor(Entity):
     def end_turn(self):
         """Implement all actions to be undertaken at the end of an actor's turn."""
         return
-    
+
     def new_round(self):
         self.update_traits()
         self.current_action_points = self.max_action_points
         self.reset_attack_count()
         self.reset_advantage_count()
         self.help_count = 0
-        
+
     def full_rest(self):
         """
         Restore all attributes to their maximum values, simulating a full rest.

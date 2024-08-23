@@ -5,6 +5,7 @@ from .attributes import Attributes
 from .traits import Trait
 from dataclasses import fields, asdict
 
+
 class Entity:
     def __init__(
         self,
@@ -14,20 +15,23 @@ class Entity:
         **kwargs,  # Defines the base attributes
     ):
         self.name = name
-        
+
         # Ensure traits is always a list and validate each trait
         if isinstance(traits, Trait):
             self.base_traits = [deepcopy(traits)]
         elif isinstance(traits, list):
             for trait in traits:
                 if not isinstance(trait, Trait):
-                    raise TypeError(f"All elements in 'traits' must be of type 'Trait'. Invalid element: {trait}")
+                    raise TypeError(
+                        f"All elements in 'traits' must be of type 'Trait'. Invalid element: {trait}"
+                    )
             self.base_traits = traits
         elif traits is None:
             self.base_traits = []
         else:
-            raise TypeError(f"'traits' must be a 'Trait' instance or a list of 'Trait' instances. Invalid element: {traits}")
-
+            raise TypeError(
+                f"'traits' must be a 'Trait' instance or a list of 'Trait' instances. Invalid element: {traits}"
+            )
 
         # Cache for damage modifiers (resistance and vulnerabilities)
         self._cached_attributes = None
@@ -152,7 +156,7 @@ class Entity:
     @property
     def traits(self) -> List["Trait"]:
         return self.get_trait_sources()
-        
+
     @property
     def damage_modifiers(self) -> List["DamageModifier"]:
         return self.calculate_modifiers(DamageModifier)
@@ -185,7 +189,9 @@ class Entity:
 
     def __str__(self):
         non_standard_attributes = {}
-        default_attributes = asdict(Attributes())  # Get default attribute values as a dict
+        default_attributes = asdict(
+            Attributes()
+        )  # Get default attribute values as a dict
 
         # Check each attribute and compare with the default
         for field in fields(self.base_attributes):
@@ -195,6 +201,8 @@ class Entity:
                 non_standard_attributes[field.name] = current_value
 
         # Create a string representation of non-standard attributes
-        attributes_str = ', '.join(f"{key}: {value}" for key, value in non_standard_attributes.items())
-        
+        attributes_str = ", ".join(
+            f"{key}: {value}" for key, value in non_standard_attributes.items()
+        )
+
         return f"{self.name}: {attributes_str if attributes_str else 'No non-standard attributes'}"

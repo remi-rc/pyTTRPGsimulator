@@ -55,8 +55,6 @@ class Attributes:
     mastery_light_armor: bool = False
     mastery_heavy_armor: bool = False
 
-    is_magic: bool = False
-
     true_damage_on_new_turn = 0
 
     # Conditions
@@ -96,7 +94,9 @@ class Attributes:
                 # Use addition for integer attributes
                 setattr(result, field_name, current_value + other_value)
             else:
-                raise TypeError(f"Unsupported type for field '{field_name}': {type(current_value)}")
+                raise TypeError(
+                    f"Unsupported type for field '{field_name}': {type(current_value)}"
+                )
 
         return result
 

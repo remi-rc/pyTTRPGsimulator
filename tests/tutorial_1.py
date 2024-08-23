@@ -56,11 +56,18 @@ epic_weapon.weapon_styles = [rpg.Sword_style()]
 
 
 # Maybe the weapon is enchanted, and provides a resistance to cold damage ? Resist X=1
-resist_cold = rpg.Trait(damage_modifiers=rpg.Resistance(damage_type=rpg.Cold(), value=1), name="Resistance to Cold")
+resist_cold = rpg.Trait(
+    damage_modifiers=rpg.Resistance(damage_type=rpg.Cold(), value=1),
+    name="Resistance to Cold",
+)
 
 # But maybe the weapon will also give vulnerability to fire damage ? Vulnerability Double
-vulnerability_fire = rpg.Trait(damage_modifiers=rpg.Vulnerability(
-    damage_type=rpg.Fire(), value=2, is_multiplicative=True), name="Vulnerability to Fire")
+vulnerability_fire = rpg.Trait(
+    damage_modifiers=rpg.Vulnerability(
+        damage_type=rpg.Fire(), value=2, is_multiplicative=True
+    ),
+    name="Vulnerability to Fire",
+)
 
 
 # We can now add these attributes to the weapon
@@ -72,15 +79,12 @@ print(epic_weapon, "\n")
 
 
 # %% Finally, we can add the items to our hero :
-print("Remi.is_magic : ", Remi.is_magic)
 print("Remi.has_magic_weapon : ", Remi.has_magic_weapon)
 Remi.add_item([epic_armor, nice_shield, epic_weapon])
-print("Remi.is_magic : ", Remi.is_magic)
 print("Remi.has_magic_weapon : ", Remi.has_magic_weapon)
 
 # and we can print again to check the actor has updated :
 print(Remi.items)
-
 
 # %% Note that we can also create an actor directly equipped
 Remi = rpg.Actor(

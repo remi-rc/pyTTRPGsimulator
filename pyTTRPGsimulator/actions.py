@@ -104,81 +104,82 @@ class Attack(Action):
     ):
         super().__init__(action_points_cost, mana_points_cost, stamina_points_cost)
 
-    def execute(self, source: "Actor", targets: List["Actor"]):
+    def execute(self, source: "Actor", target: "Actor"):
         if not self._apply_costs(source):
             return
 
         source.attack_count += 1
         advantage_count = source.advantage_count
 
-        for target in targets:
-            # Determine disadvantage based on dodging or full dodging status
-            disadvantage_count = source.attack_count - 1
-            if target.is_full_dodging or target.is_dodging:
-                disadvantage_count += 1
-                # Then remove "simple" dodging
-                target.is_dodging = False
+        # Determine disadvantage based on dodging or full dodging status
+        disadvantage_count = max(
+            0, source.attack_count - source.max_attack_before_penalty
+        )
+        if target.is_full_dodging or target.is_dodging:
+            disadvantage_count += 1
+            # Then remove "simple" dodging
+            target.is_dodging = False
 
-            # Determine the number of dice rolls based on advantage and disadvantage
-            # Here, contrary to previous versions, each target gets its own attack roll
-            rolls = [
-                random.randint(1, 20)
-                for _ in range(max(disadvantage_count + 1 - advantage_count, 1))
-            ]
+        # Determine the number of dice rolls based on advantage and disadvantage
+        # Here, contrary to previous versions, each target gets its own attack roll
+        rolls = [
+            random.randint(1, 20)
+            for _ in range(max(disadvantage_count + 1 - advantage_count, 1))
+        ]
 
-            if advantage_count > disadvantage_count:
-                attack_roll = max(rolls)  # Use the highest roll due to advantage
-                advantage_count = 0  # Reset advantage count after use
-            else:
-                attack_roll = min(rolls)  # Use the lowest roll due to disadvantage
+        if advantage_count > disadvantage_count:
+            attack_roll = max(rolls)  # Use the highest roll due to advantage
+            advantage_count = 0  # Reset advantage count after use
+        else:
+            attack_roll = min(rolls)  # Use the lowest roll due to disadvantage
 
-            attack_tot = (
-                attack_roll
-                + source.prime_modifier
-                + source.combat_mastery
-                + source.one_time_hit_bonus
-            )
-            is_critical_hit = attack_roll == 20
+        attack_tot = (
+            attack_roll
+            + source.prime_modifier
+            + source.combat_mastery
+            + source.one_time_hit_bonus
+        )
+        is_critical_hit = attack_roll == source.critical_hit_threshold
 
-            # Remove any one-time hit bonus after it's used
-            source.one_time_hit_bonus = 0
+        # Remove any one-time hit bonus after it's used
+        source.one_time_hit_bonus = 0
 
-            # Apply weapon styles and calculate total attack roll for the target
-            # Assumes the actor uses the first weapon in their inventory
-            if source.weapons:
-                weapon = source.weapons[0]
-            else:
-                raise ValueError(f"{source.name} has no weapon equipped!")
-            
-            bonus_dmg_ws, bonus_hit_ws = weapon.apply_styles(target)
-            attack_tot_target = attack_tot + bonus_hit_ws
+        # Apply weapon styles and calculate total attack roll for the target
+        # Assumes the actor uses the first weapon in their inventory
+        if source.weapons:
+            weapon = source.weapons[0]
+        else:
+            raise ValueError(f"{source.name} has no weapon equipped!")
 
-            if attack_tot_target >= target.physical_defense or is_critical_hit:
-                logger.info(f"{source.name}'s attack hits {target.name}.")
+        bonus_dmg_ws, bonus_hit_ws = weapon.apply_styles(target)
+        attack_tot_target = attack_tot + bonus_hit_ws
 
-                # TODO : handle brutal and heavy hit correctly
-                damage_bonus = int((attack_tot_target - target.physical_defense) // 5)
-                if is_critical_hit:
-                    damage_bonus += source.critical_hit_damage
+        if attack_tot_target >= target.physical_defense or is_critical_hit:
+            logger.info(f"{source.name}'s attack hits {target.name}.")
 
-                for ij in range(len(weapon.damages)):
-                    if ij == 0:
-                        total_damage = (
-                            weapon.damages[ij].value + damage_bonus + bonus_dmg_ws
-                        )
-                    else:
-                        total_damage = weapon.damages[ij].value
+            # TODO : handle brutal and heavy hit correctly
+            damage_bonus = int((attack_tot_target - target.physical_defense) // 5)
+            if is_critical_hit:
+                damage_bonus += source.critical_hit_damage
 
-                    target.take_damage(
-                        [
-                            Damage(
-                                damage_type=weapon.damages[ij].damage_type,
-                                value=total_damage,
-                            )
-                        ]
+            for ij in range(len(weapon.damages)):
+                if ij == 0:
+                    total_damage = (
+                        weapon.damages[ij].value + damage_bonus + bonus_dmg_ws
                     )
-            else:
-                logger.info(f"{source.name}'s attack missed {target.name}.")
+                else:
+                    total_damage = weapon.damages[ij].value
+
+                target.take_damage(
+                    [
+                        Damage(
+                            damage_type=weapon.damages[ij].damage_type,
+                            value=total_damage,
+                        )
+                    ]
+                )
+        else:
+            logger.info(f"{source.name}'s attack missed {target.name}.")
 
 
 class InflictDamage(Action):
@@ -372,7 +373,7 @@ class Help(Action):
     ):
         super().__init__(action_points_cost, mana_points_cost, stamina_points_cost)
 
-    def execute(self, source: "Actor", targets: List["Actor"]):
+    def execute(self, source: "Actor", target: "Actor"):
         if not self._apply_costs(source):
             return
 
@@ -385,9 +386,8 @@ class Help(Action):
 
         source.help_count += 1
 
-        for ally in targets:
-            ally.one_time_hit_bonus += bonus
-            logger.info(f"{source.name} helps {ally.name}")
+        target.one_time_hit_bonus += bonus
+        logger.info(f"{source.name} helps {target.name}")
 
 
 class ImposeTrait(Action):

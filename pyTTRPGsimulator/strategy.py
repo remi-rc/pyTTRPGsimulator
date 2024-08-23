@@ -59,7 +59,7 @@ class DefaultDodgeStrategy(Strategy):
         enemies: List["Actor"],
     ) -> Action:
         # Calculate actions based on remaining action points and advantages
-        action_points = actor.action_points
+        action_points = actor.current_action_points
         attack_count = actor.attack_count
 
         # If this actor is targeted by enemies, the full dodge action is taken
