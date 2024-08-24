@@ -23,36 +23,39 @@ strategies = [
     rpg.FullAttackStrategy(),  # Will attack recklessly as many times as action points allow
 ]
 
-# The player characters are the following :
+# The items of the characters are the following :
+big_sword = rpg.MeleeWeapon(damages=[rpg.Damage(damage_type=rpg.Slashing(), value=2)])
 sword = rpg.MeleeWeapon(damages=[rpg.Damage(damage_type=rpg.Slashing(), value=1)])
-board = rpg.Shield(physical_defense=2, physical_damage_reduction=1)
+shield = rpg.Shield(physical_defense=2)
+novice_armor = rpg.Armor(physical_defense=1)
 
+# The player characters are the following :
 Icarus = rpg.Actor(
     max_health_points=8,
-    physical_defense=8,
+    physical_defense=9,
     combat_mastery=1,
     might=3,
-    items=[sword, board],
+    items=[big_sword, novice_armor],
     combat_strategy=strategies[0],
     name="Icarus",
 )
 
 Claudio = rpg.Actor(
     max_health_points=8,
-    physical_defense=8,
+    physical_defense=9,
     combat_mastery=1,
     agility=3,
-    items=[sword, board],
+    items=[sword, shield, novice_armor],
     combat_strategy=strategies[0],
     name="Claudio",
 )
 
 Sui = rpg.Actor(
     max_health_points=8,
-    physical_defense=8,
+    physical_defense=9,
     combat_mastery=1,
     charisma=3,
-    items=[sword, board],
+    items=[big_sword, novice_armor],
     combat_strategy=strategies[0],
     name="Sui",
 )
@@ -121,48 +124,3 @@ num_rounds_list, num_turns_list, winrate_A, remaining_hp_list = rpg.run_simulati
 rpg.plot_simulation_results(num_turns_list, winrate_A, remaining_hp_list)
 
 print("Winrate of player characters = ", winrate_A)
-
-
-# %% Concluding remarks
-"""
-There are still many more things in the code that you could play with :
-
-1/ The first is the Combat Strategy, which you can add to an actor to indicate
-how they fight. This has dramatic consequences on the winrate. 
-The default strategy is kinda efficient already :)
-
-actor.strategy chosen between :
-
-    rpg.FullAttackStrategy()
-    rpg.DefaultStrategy()
-    rpg.HelpAllyStrategy()
-    
-    Try to change the strategies currently assigned to the actors, for 
-    instance by making the bears and wolves more intelligent !
-
-2/ The second is closely related, and is the Targeting Strategy of an actor.
-Some actors favor the weakest foes, while some favor the strongest, etc.
-actor.targeting_strategy chosen between :
-
-    rpg.TargetWeakestStrategy()
-    rpg.TargetHealthiestStrategy()
-    rpg.RandomTargetStrategy()
-    
-
-
-You should now be equipped to roughly evaluate the influence of items, 
-enemy numbers, initiative and a bunch of other variables in combat :)
-
-Try implementing an epic item from tutorial_1.py, adding it to an actor,
-and see how this changes the outcome of the fight.
-
-Add a bear to team_B and see how this changes the outcome of the fight.
-
-You can reduce the number of action points of an actor at creation:
-
-actor = rpg.actor(action_points=3)
-
-or after creation 
-
-actor.max_action_points = 3
-"""

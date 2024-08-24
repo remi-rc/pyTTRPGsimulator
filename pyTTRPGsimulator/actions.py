@@ -160,8 +160,27 @@ class Attack(Action):
         if attack_tot_target >= target.physical_defense or is_critical_hit:
             logger.info(f"    {source.name}'s attack hits {target.name}.")
 
-            # TODO : handle brutal and heavy hit correctly
-            damage_bonus = int((attack_tot_target - target.physical_defense) // 5)
+            if is_critical_hit:
+                logger.info(f"        Critical hit !")
+
+            if attack_tot_target >= target.physical_defense + 5:
+                is_heavy_hit = True
+                # The number of brutal hit "by 5"
+                N_brutal_hit = (
+                    int((attack_tot_target - target.physical_defense) // 5) - 1
+                )
+                damage_bonus = (
+                    source.heavy_hit_damage + N_brutal_hit * source.brutal_hit_damage
+                )
+                if N_brutal_hit > 0:
+                    logger.info(f"        Brutal hit !")
+                else:
+                    logger.info(f"        Heavy hit !")
+
+            else:
+                is_heavy_hit = False
+                damage_bonus = 0
+
             if is_critical_hit:
                 damage_bonus += source.critical_hit_damage
 
@@ -173,13 +192,15 @@ class Attack(Action):
                 else:
                     total_damage = weapon.damages[ij].value
 
+                # A Heavy Hit or Critical Hit bypasses DR
                 target.take_damage(
                     [
                         Damage(
                             damage_type=weapon.damages[ij].damage_type,
                             value=total_damage,
                         )
-                    ]
+                    ],
+                    ignore_damage_reduction=is_critical_hit + is_heavy_hit,
                 )
         else:
             logger.info(f"    {source.name}'s attack missed {target.name}.")

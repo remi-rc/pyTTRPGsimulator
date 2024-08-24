@@ -80,6 +80,19 @@ class DefaultDodgeStrategy(CombatStrategy):
             return gain_advantage_action
 
 
+def is_ally_nearby(actor, ally, enemies):
+    # Check if the ally is targeting the same target
+    if (ally.current_target == actor.current_target) or (
+        ally.current_target in enemies
+    ):
+        return True
+    # Check if the ally is targeting an enemy that is targeting the actor
+    for enemy in enemies:
+        if enemy.current_target == actor or ally.current_target == enemy:
+            return True
+    return False
+
+
 class HelpAllyStrategy(CombatStrategy):
     def choose_action(
         self,
@@ -91,25 +104,15 @@ class HelpAllyStrategy(CombatStrategy):
         action_points = actor.action_points
         attack_count = actor.attack_count
 
-        def is_ally_nearby(ally):
-            # Check if the ally is targeting the same target
-            if (ally.current_target == actor.current_target) or (
-                ally.current_target in enemies
-            ):
-                return True
-            # Check if the ally is targeting an enemy that is targeting the actor
-            for enemy in enemies:
-                if enemy.current_target == actor or ally.current_target == enemy:
-                    return True
-            return False
-
         # As your first action, help an ally
         if action_points == actor.max_action_points:
             # Select random ally that has not been helped yet and is nearby
             unhelped_nearby_allies = [
                 ally
                 for ally in allies
-                if ally != actor and ally.help_count == 0 and is_ally_nearby(ally)
+                if ally != actor
+                and ally.help_count == 0
+                and is_ally_nearby(actor, ally, enemies)
             ]
             if unhelped_nearby_allies:
                 ally_to_help = random.choice(unhelped_nearby_allies)

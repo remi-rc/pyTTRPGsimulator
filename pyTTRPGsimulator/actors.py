@@ -1,6 +1,7 @@
 import logging
 from typing import List, Optional, Type, Dict, Union
 import random
+import math
 
 from .items import Item, Armor, Weapon, ItemManager
 from .damages import Damage, Physical
@@ -85,7 +86,9 @@ class Actor(Entity):
 
         return roll + bonus
 
-    def calculate_damage_taken(self, damage: "Damage") -> float:
+    def calculate_damage_taken(
+        self, damage: "Damage", ignore_damage_reduction=False
+    ) -> float:
         """
         Calculate the total damage taken by the actor after applying resistances,
         vulnerabilities, and armor reductions.
@@ -136,20 +139,21 @@ class Actor(Entity):
             damage_value + additive_vulnerability
         ) * multiplicative_vulnerability
 
-        # Apply armor reduction based on damage type
-        reduction = (
-            self.attributes.mystical_damage_reduction
-            if not isinstance(damage.damage_type, Physical)
-            else self.attributes.physical_damage_reduction
-        )
-        damage_value -= reduction
+        # Apply armor reduction based on damage type (except if ignore_damage_reduction=True)
+        if not ignore_damage_reduction:
+            reduction = (
+                self.attributes.mystical_damage_reduction
+                if not isinstance(damage.damage_type, Physical)
+                else self.attributes.physical_damage_reduction
+            )
+            damage_value -= reduction
 
         # Ensure the damage value is not negative
         damage_value = max(damage_value, 0)
 
         return damage_value
 
-    def take_damage(self, damages: List["Damage"]):
+    def take_damage(self, damages: List["Damage"], ignore_damage_reduction=False):
         """
         Apply a list of damages to the actor, updating health points accordingly.
         Log each type of damage separately in a detailed and structured way.
@@ -158,7 +162,9 @@ class Actor(Entity):
         damage_report = []
 
         for damage in damages:
-            calculated_damage = self.calculate_damage_taken(damage)
+            calculated_damage = self.calculate_damage_taken(
+                damage, ignore_damage_reduction
+            )
             total_damage += calculated_damage
             damage_report.append(
                 f"            * {calculated_damage} {damage.damage_type} damage"
@@ -261,6 +267,15 @@ class Actor(Entity):
         return self.current_health_points > self.death_door_threshold
 
     @property
+    def is_bloodied(self) -> bool:
+        # Always round up in DC20 (Core Rules Beta 0.8, page 39)
+        return self.current_health_points <= math.ceil(self.max_health_points / 2)
+
+    @property
+    def is_well_bloodied(self) -> bool:
+        return self.current_health_points <= math.ceil(self.max_health_points / 4)
+
+    @property
     def is_at_death_door(self) -> bool:
         return (self.current_health_points < 0) & (
             self.current_health_points > self.death_door_threshold
@@ -277,6 +292,7 @@ class Actor(Entity):
     def new_turn(self):
         """Implement all actions to be undertaken at the begining of an actor's turn."""
         self.is_full_dodging = False
+        self.current_action_points -= self.attributes.true_damage_on_new_turn
 
     def end_turn(self):
         """Implement all actions to be undertaken at the end of an actor's turn."""
