@@ -184,6 +184,8 @@ class Attack(Action):
             if is_critical_hit:
                 damage_bonus += source.critical_hit_damage
 
+            # Add regular damage bonus from rage or other traits)
+            damage_bonus += source.hit_damage
             for ij in range(len(weapon.damages)):
                 if ij == 0:
                     total_damage = (

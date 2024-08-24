@@ -48,6 +48,7 @@ class Attributes:
     max_attack_before_penalty: int = 0
     critical_hit_damage: int = 0
     critical_hit_threshold: int = 0  # negative value to reduce the threshold
+    hit_damage: int = 0
     heavy_hit_damage: int = 0
     brutal_hit_damage: int = 0
     death_door_threshold: int = 0
