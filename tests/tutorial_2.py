@@ -30,34 +30,34 @@ shield = rpg.Shield(physical_defense=2)
 novice_armor = rpg.Armor(physical_defense=1)
 
 # The player characters are the following :
-Icarus = rpg.Actor(
+Aldric = rpg.Actor(
     max_health_points=8,
     physical_defense=9,
     combat_mastery=1,
     might=3,
     items=[big_sword, novice_armor],
     combat_strategy=strategies[0],
-    name="Icarus",
+    name="Aldric",
 )
 
-Claudio = rpg.Actor(
+Liora = rpg.Actor(
     max_health_points=8,
     physical_defense=9,
     combat_mastery=1,
     agility=3,
     items=[sword, shield, novice_armor],
     combat_strategy=strategies[0],
-    name="Claudio",
+    name="Liora",
 )
 
-Sui = rpg.Actor(
+Fynric = rpg.Actor(
     max_health_points=8,
     physical_defense=9,
     combat_mastery=1,
     charisma=3,
     items=[big_sword, novice_armor],
     combat_strategy=strategies[0],
-    name="Sui",
+    name="Fynric",
 )
 
 # The monster characters are the following :
@@ -95,7 +95,7 @@ Wolf_2 = rpg.Actor(
 )
 
 # %% We can now have them fight !
-players = [Icarus, Claudio, Sui]
+players = [Aldric, Liora, Fynric]
 monsters = [Bear, Wolf_1, Wolf_2]
 
 
