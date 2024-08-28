@@ -2,6 +2,7 @@ import logging
 from typing import List, Optional, Type, Dict, Union
 import random
 import math
+import copy
 
 from .items import Item, Armor, Weapon, ItemManager
 from .damages import Damage, Physical
@@ -54,7 +55,10 @@ class Actor(Entity):
         self.position_X = 0
         self.position_Y = 0
 
-        attributes = attributes if attributes is not None else actor_attributes
+        #  DANGER : A deepcopy is required to avoid sharing attributes among actors
+        attributes = (
+            attributes if attributes is not None else copy.deepcopy(actor_attributes)
+        )
         super().__init__(name=name, traits=traits, attributes=attributes, **kwargs)
 
         # Set resources
@@ -77,7 +81,7 @@ class Actor(Entity):
         self.targeting_strategy.select_target(self, team_allies, team_enemies)
 
     def roll_initiative(self):
-        roll = random.randint(1, 20)
+        roll = random.randint(1, 20) + self.get_bonus_roll()
         bonus = self.attributes.initiative
         if bonus != 0:
             logger.info(f"{self.name} gets {roll + bonus} ({roll} + {bonus})")
@@ -85,6 +89,27 @@ class Actor(Entity):
             logger.info(f"{self.name} gets {roll}")
 
         return roll + bonus
+
+    def roll_save(self, characteristic):
+        roll = random.randint(1, 20) + self.get_bonus_roll()
+
+        if characteristic.upper() == "MIGHT":
+            bonus = self.might
+        elif characteristic.upper() == "AGILITY":
+            bonus = self.agility
+        elif characteristic.upper() == "INTELLIGENCE":
+            bonus = self.intelligence
+        elif characteristic.upper() == "CHARISMA":
+            bonus = self.charisma
+
+        return roll + bonus
+
+    def get_bonus_roll(self):
+        return (
+            self.D8_roll_bonus * random.randint(1, 8)
+            + self.D6_roll_bonus * random.randint(1, 6)
+            + self.D4_roll_bonus * random.randint(1, 4)
+        )
 
     def calculate_damage_taken(
         self, damage: "Damage", ignore_damage_reduction=False

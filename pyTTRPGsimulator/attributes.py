@@ -57,7 +57,14 @@ class Attributes:
     mastery_light_armor: bool = False
     mastery_heavy_armor: bool = False
 
+    # The following is used to damage the actor having this trait at every "new_turn", not "new_round"
     true_damage_on_new_turn = 0
+
+    # Dice bonus (separate from the Help Action, which is an Actor property only.)
+    # The following is used to represent Bless type traits, where bonus dice are used for every roll.
+    D8_roll_bonus: int = 0
+    D6_roll_bonus: int = 0
+    D4_roll_bonus: int = 0
 
     # Conditions
     is_bleeding: bool = False

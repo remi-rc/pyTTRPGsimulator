@@ -174,17 +174,20 @@ class Entity:
         Dynamically generate properties for each attribute in the Attributes class.
         """
         for field in self.base_attributes.__dataclass_fields__:
-            # Create a property for each attribute in Attributes
+            # Define a getter function for the attribute
+            def get_attr(self, key=field):
+                return getattr(self.aggregate_attributes(), key)
+
+            # Define a setter function for the attribute
+            def set_attr(self, value, key=field):
+                setattr(self.base_attributes, key, value)
+                self.invalidate_cache()  # Invalidate cache when an attribute is set
+
+            # Attach the property to the instance
             setattr(
                 self.__class__,
                 field,
-                property(
-                    fget=lambda self, key=field: getattr(self.attributes, key),
-                    # Only the base attributes of an object are set
-                    fset=lambda self, value, key=field: setattr(
-                        self.base_attributes, key, value
-                    ),
-                ),
+                property(get_attr, set_attr),
             )
 
     def __str__(self):

@@ -132,16 +132,17 @@ class Attack(Action):
         else:
             attack_roll = min(rolls)  # Use the lowest roll due to disadvantage
 
+        # General bonus (from bless)
+        bonus_to_hit = source.get_bonus_roll()
+
         attack_tot = (
             attack_roll
             + source.prime_modifier
             + source.combat_mastery
             + source.one_time_hit_bonus
+            + bonus_to_hit
         )
         is_critical_hit = attack_roll == source.critical_hit_threshold
-
-        # Remove any one-time hit bonus after it's used
-        source.one_time_hit_bonus = 0
 
         # Apply weapon styles and calculate total attack roll for the target
         # Assumes the actor uses the first weapon in their inventory
@@ -156,6 +157,29 @@ class Attack(Action):
         logger.info(
             f"{source.name} attacks {target.name} ! ({self.action_points_cost}AP)"
         )
+
+        # Get precise logs for the rolls
+        if source.one_time_hit_bonus > 0:
+            if bonus_to_hit == 0:
+                logger.info(
+                    f"    {source.name} rolls a {attack_roll} + {source.prime_modifier} (prime) + {source.combat_mastery} (CM) + {source.one_time_hit_bonus} (Help)"
+                )
+            else:
+                logger.info(
+                    f"    {source.name} rolls a {attack_roll} + {source.prime_modifier} (prime) + {source.combat_mastery} (CM) + {source.one_time_hit_bonus} (Help) + {bonus_to_hit} (Bless)"
+                )
+        else:
+            if bonus_to_hit == 0:
+                logger.info(
+                    f"    {source.name} rolls a {attack_roll} + {source.prime_modifier} (prime) + {source.combat_mastery} (CM)"
+                )
+            else:
+                logger.info(
+                    f"    {source.name} rolls a {attack_roll} + {source.prime_modifier} (prime) + {source.combat_mastery} (CM) + {bonus_to_hit} (Bless)"
+                )
+
+        # Remove any one-time hit bonus after it's used
+        source.one_time_hit_bonus = 0
 
         if attack_tot_target >= target.physical_defense or is_critical_hit:
             logger.info(f"    {source.name}'s attack hits {target.name}.")
@@ -427,25 +451,22 @@ class ImposeTrait(Action):
         action_points_cost: int = 0,
         mana_points_cost: int = 0,
         stamina_points_cost: int = 0,
-        status: List["Trait"] = None,
+        traits: List["Trait"] = None,
     ):
         super().__init__(action_points_cost, mana_points_cost, stamina_points_cost)
-        self.status = status if status is not None else []
+        self.traits = traits if traits is not None else []
 
-    def execute(self, source: "Action", targets: List["Action"]):
+    def execute(self, source: "Actor", targets: List["Actor"]):
         if not self._apply_costs(source):
             return
 
+        print(source.name)
         for target in targets:
+            print(target.name)
             logger.info(f"{source.name} is imposing conditions on {target.name}")
-            for status in self.status:
-                logger.info(
-                    f"{source.name} imposes {status.__class__.__name__} on {target.name}"
-                )
-                target.add_modifier(status)
-            logger.info(
-                f"{target.name} now has the following conditions: {target.modifier_manager.get_modifiers(Trait)}"
-            )
+            for trait in self.traits:
+                logger.info(f"{source.name} imposes {trait.name} on {target.name}")
+                target.add_trait(trait)
 
 
 class ImposeSavingThrow(Action):
