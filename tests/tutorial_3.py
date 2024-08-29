@@ -33,7 +33,7 @@ Aldric = rpg.Actor(
 )
 
 Liora = rpg.Actor(
-    max_health_points=8,
+    max_health_points=40,
     physical_defense=9,
     combat_mastery=1,
     agility=3,
@@ -42,7 +42,7 @@ Liora = rpg.Actor(
 )
 
 Bear = rpg.Actor(
-    max_health_points=20,
+    max_health_points=40,
     physical_defense=11,
     might=3,
     combat_mastery=1,
@@ -54,10 +54,26 @@ Bear = rpg.Actor(
 # %% Create a bless Spell
 # Note that in the future, the Spell class will be used instead of a specific Action
 Bless_trait = rpg.Trait(name="Bless", duration=10, D4_roll_bonus=1)
-Bless = rpg.ImposeTrait(action_points_cost=2, mana_points_cost=1, traits=[Bless_trait])
+
+Bless = rpg.Spell(
+    traits=Bless_trait,
+    concentration=True,
+    action_points_cost=1,
+    mana_points_cost=1,
+    school="Abjuration",
+    name="Bless",
+)
+
+
+# Bless = rpg.ImposeTrait(action_points_cost=2, mana_points_cost=1, traits=[Bless_trait])
 
 # %% Aldric casts Bless on Liora and himself, and they then fight the bear
-Bless.execute(Aldric, [Aldric, Liora])
+# Bless.execute(Aldric, [Aldric, Liora])
+
+cast_spell_action = rpg.CastSpell()
+cast_spell_action.execute(source=Aldric, targets=[Aldric, Liora], spell=Bless)
+
+print("Is Aldric concentrating ? ", Aldric.is_concentrating)
 
 print("Bless_trait", Bless_trait.attributes)
 
@@ -69,3 +85,9 @@ print("num_rounds = ", num_rounds)
 print("num_turns = ", num_turns)
 print("winning_team = ", winning_team)
 print(combat_manager.fight_debrief())
+
+
+print("Aldric traits : ", [trait.name for trait in Aldric.traits])
+print(
+    "Aldric concentrating on  : ", {spell.name for spell in Aldric.is_concentrating_on}
+)

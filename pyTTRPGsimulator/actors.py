@@ -41,9 +41,10 @@ class Actor(Entity):
         self.item_manager.add_item(items if items is not None else [])
 
         # Combat-related properties
+        self.is_concentrating = False
+        self.is_concentrating_on = []
         self.combat_strategy = combat_strategy
         self.current_target: Optional["Actor"] = None
-        # TODO : Not sure how to best implement the targeting enemies dynamically
         self.targeting_enemies: List["Actor"] = []
         self.targeting_strategy = targeting_strategy
         self.attack_count = 0  # Track the number of attacks in the current turn
@@ -101,8 +102,60 @@ class Actor(Entity):
             bonus = self.intelligence
         elif characteristic.upper() == "CHARISMA":
             bonus = self.charisma
+        elif characteristic.upper() == "PHYSICAL":
+            bonus = max(self.might, self.agility)
+        elif characteristic.upper() == "MENTAL":
+            bonus = max(self.intelligence, self.charisma)
 
         return roll + bonus
+
+    def maintain_concentration(self, damage):
+        # Rules page 58 for concentration
+        mental_save = self.roll_save("MENTAL")
+        DC = max(10, 2 * damage)
+
+        # Lose concentration if at death's door (p 35) or if dead or if fail save
+        if self.is_at_death_door or self.is_dead:
+            logger.info(f"        * {self.name} is dead or at Death's Doors.")
+            self.remove_concentration()
+            return
+
+        logger.info(
+            f"        * {self.name} tries to maintain concentration and rolls a {mental_save} against a DC of {DC}."
+        )
+
+        # Save to keep concentration !
+        if mental_save >= DC:
+            logger.info(f"        * {self.name} keeps concentrating.")
+            return
+        else:
+            return self.remove_concentration()
+
+    def remove_concentration(self):
+        # Sometimes, you have to lose your concentration...
+        for spell in self.is_concentrating_on:
+            logger.info(f"        * {self.name} looses concentration on {spell.name}")
+            for target in spell.targets:
+                # Remove all potential traits (some of them might not be present in the actor
+                # # but that's the trait manager job to handle this)
+                for trait in spell.traits + spell.traits_on_save + spell.traits_on_fail:
+                    target.remove_trait(trait)
+                    logger.info(
+                        f"            * {target.name} looses {trait.name} trait"
+                    )
+
+        self.is_concentrating_on = []
+        self.is_concentrating = False
+
+    def add_concentration(self, spell):
+        # If an actor is already concentrating more that their limit, they lose all previous concentration to add the new one
+        if len(self.is_concentrating_on) >= self.N_concentration:
+            self.is_concentrating_on = [spell]
+        # Otherwise, the spell is added to the concentration list
+        else:
+            self.is_concentrating_on.extend([spell])
+        self.is_concentrating = True
+        logger.info(f"        * {self.name} now concentrates on {spell.name}.")
 
     def get_bonus_roll(self):
         return (
@@ -206,6 +259,10 @@ class Actor(Entity):
         logger.info(
             f"        * {self.name} now has {self.current_health_points} HP left."
         )
+
+        # If the actor is concentrating, they have to do a mental save to keep it.
+        if self.is_concentrating:
+            self.maintain_concentration(total_damage)
 
     def add_item(self, item: Union[Item, List[Item]]):
         if isinstance(item, list):

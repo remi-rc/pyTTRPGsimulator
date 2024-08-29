@@ -43,6 +43,8 @@ class Attributes:
 
     combat_mastery: int = 0
     spell_DC: int = 0
+    concentration: bool = False  # Whether trait takes concentration
+    N_concentration: int = 0  # max number of spells one can concentrate on
 
     max_action_points: int = 0
     max_attack_before_penalty: int = 0
@@ -122,6 +124,7 @@ actor_attributes = Attributes(
     move_speed=5,
     critical_hit_threshold=20,
     mastery_light_armor=True,
+    N_concentration=1,
 )
 
 hero_attributes = Attributes(
@@ -138,4 +141,5 @@ hero_attributes = Attributes(
     mastery_light_armor=True,
     death_door_threshold=-3,
     death_door_action=1,
+    N_concentration=1,
 )

@@ -75,9 +75,17 @@ class TraitsManager:
         # If the trait is not found, add it to the list
         self.traits.append(copy.deepcopy(new_trait))
 
-    def remove_trait(self, trait: Trait):
-        if trait in self.traits:
-            self.traits.remove(trait)
+    def remove_trait(self, traits: Union[Trait, List[Trait]]):
+        if isinstance(traits, list):
+            # Extract trait names from the list of traits
+            trait_names_to_remove = {trait.name for trait in traits}
+            # Remove all traits with names in trait_names_to_remove
+            self.traits = [
+                t for t in self.traits if t.name not in trait_names_to_remove
+            ]
+        else:
+            # Handle single trait case
+            self.traits = [t for t in self.traits if t.name != traits.name]
 
     def update_traits(self):
         """
