@@ -76,8 +76,11 @@ class Entity:
         self.invalidate_cache()
 
     def _remove_single_trait(self, trait: Trait):
+        # TODO : understand why the first if does not suffice. Probably due to python memory handling that I do not fully understand yet.
         if trait in self.base_traits:
             self.base_traits.remove(trait)
+        if trait.name in [t.name for t in self.base_traits]:
+            self.base_traits = [t for t in self.base_traits if t.name != trait.name]
 
     def invalidate_cache(self):
         """

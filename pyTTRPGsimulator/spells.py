@@ -31,16 +31,20 @@ class Spell:
     ):
 
         # Convert single traits to a list if needed
-        self.traits = [traits] if isinstance(traits, Trait) else (traits or [])
+        self.traits = (
+            [deepcopy(traits)]
+            if isinstance(traits, Trait)
+            else (deepcopy(traits) or [])
+        )
         self.traits_on_save = (
-            [traits_on_save]
+            [deepcopy(traits_on_save)]
             if isinstance(traits_on_save, Trait)
-            else (traits_on_save or [])
+            else (deepcopy(traits_on_save) or [])
         )
         self.traits_on_fail = (
-            [traits_on_fail]
+            [deepcopy(traits_on_fail)]
             if isinstance(traits_on_fail, Trait)
-            else (traits_on_fail or [])
+            else (deepcopy(traits_on_fail) or [])
         )
 
         # Initialize damages lists, default to empty lists if not provided

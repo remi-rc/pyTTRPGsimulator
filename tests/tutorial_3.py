@@ -33,7 +33,7 @@ Aldric = rpg.Actor(
 )
 
 Liora = rpg.Actor(
-    max_health_points=40,
+    max_health_points=8,
     physical_defense=9,
     combat_mastery=1,
     agility=3,
@@ -42,7 +42,7 @@ Liora = rpg.Actor(
 )
 
 Bear = rpg.Actor(
-    max_health_points=40,
+    max_health_points=20,
     physical_defense=11,
     might=3,
     combat_mastery=1,
@@ -64,18 +64,10 @@ Bless = rpg.Spell(
     name="Bless",
 )
 
-
-# Bless = rpg.ImposeTrait(action_points_cost=2, mana_points_cost=1, traits=[Bless_trait])
-
 # %% Aldric casts Bless on Liora and himself, and they then fight the bear
-# Bless.execute(Aldric, [Aldric, Liora])
 
 cast_spell_action = rpg.CastSpell()
 cast_spell_action.execute(source=Aldric, targets=[Aldric, Liora], spell=Bless)
-
-print("Is Aldric concentrating ? ", Aldric.is_concentrating)
-
-print("Bless_trait", Bless_trait.attributes)
 
 combat_manager = rpg.CombatManager([Aldric, Liora], [Bear], initiative_dc=10)
 
@@ -87,7 +79,38 @@ print("winning_team = ", winning_team)
 print(combat_manager.fight_debrief())
 
 
-print("Aldric traits : ", [trait.name for trait in Aldric.traits])
-print(
-    "Aldric concentrating on  : ", {spell.name for spell in Aldric.is_concentrating_on}
+# %% We can also repeat the fight a high number of times to obtain statistics
+# This allows to compare the advantage procured by the bless spell (reset at each combat)
+
+# We remove the logger
+rpg.setup_logging(logging.WARNING)
+
+N_combat = 5_000  # number of combats
+
+# We make sure the Bless trait is not used by the actor
+print("Aldric: ", [trait.name for trait in Aldric.traits])
+
+print("Liora: ", [trait.name for trait in Liora.traits])
+
+Aldric.remove_concentration()
+
+print("Aldric: ", [trait.name for trait in Aldric.traits])
+
+print("Liora: ", [trait.name for trait in Liora.traits])
+
+num_rounds_list, num_turns_list, winrate_A, remaining_hp_list = rpg.run_simulations(
+    N_combat, [Aldric, Liora], [Bear], initiative_dc=15
 )
+rpg.plot_simulation_results(num_turns_list, winrate_A, remaining_hp_list)
+
+print("Winrate of player characters without Bless = ", winrate_A)
+
+
+# We then add the Bless trait and run the combat again
+cast_spell_action.execute(source=Aldric, targets=[Aldric, Liora], spell=Bless)
+num_rounds_list, num_turns_list, winrate_A, remaining_hp_list = rpg.run_simulations(
+    N_combat, [Aldric, Liora], [Bear], initiative_dc=15
+)
+rpg.plot_simulation_results(num_turns_list, winrate_A, remaining_hp_list)
+
+print("Winrate of player characters with Bless = ", winrate_A)

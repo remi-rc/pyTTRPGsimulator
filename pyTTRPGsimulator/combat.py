@@ -1,8 +1,12 @@
 import logging
 from typing import List
+import matplotlib.pyplot as plt
+from copy import deepcopy
+
+
 from .actors import Actor
 from .actions import Attack, Help, GainAdvantage, Dodge, Full_Dodge
-import matplotlib.pyplot as plt
+
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -36,6 +40,10 @@ class CombatManager:
             actor.is_team_A = True
         for actor in team_b:
             actor.is_team_A = False
+
+        # Store an unalterated version of both teams to facilitate hard resets (with resetting initial time-sensitive traits and buffs)
+        self.team_a_init = deepcopy(team_a)
+        self.team_b_init = deepcopy(team_b)
 
     def roll_initiative(self):
         """
@@ -329,10 +337,8 @@ class CombatManager:
         """
         Reset the combat state for all actors and the CombatManager.
         """
-        for actor in self.team_a + self.team_b:
-            actor.full_rest()
-            actor.current_target = []
-            actor.targeting_enemies = []
+        self.team_a = deepcopy(self.team_a_init)
+        self.team_b = deepcopy(self.team_b_init)
         self.has_initiative = False
         self.current_turn_index = 0
         self.turns_count = 0

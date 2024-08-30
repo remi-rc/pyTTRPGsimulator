@@ -76,6 +76,7 @@ class TraitsManager:
         self.traits.append(copy.deepcopy(new_trait))
 
     def remove_trait(self, traits: Union[Trait, List[Trait]]):
+        [self.traits.remove(trait) for trait in traits]
         if isinstance(traits, list):
             # Extract trait names from the list of traits
             trait_names_to_remove = {trait.name for trait in traits}
