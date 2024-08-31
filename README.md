@@ -4,13 +4,22 @@ __pyTTRGsimulator__
 
 # Introduction
 
-This code enables Dungeon Masters and players of table-top role player games (TTRPG) to simulate combats and predict the likelihood of a win, between two teams of "actors" (i.e., player characters, monsters). The code is quite general, but has been tailored to be used along the DC20 TTRPG. It has numerous features, some of them detailed below.
+Welcome to pyTTRPGsimulator !
+This code enables Dungeon Masters and players of table-top role playing games (TTRPG) to simulate combats and predict statistically the outcome of a fight between two teams of "actors" (i.e., player characters, monsters). The code is quite general, but has been tailored to be used with the [DC20 TTRPG](https://thedungeoncoach.com/pages/dc20). Note that pyTTRPGsimulator is not authorized or endorsed by DC20 (yet).
 
-1. Creation of entities (actors and items (armors, weapons)).
+It has numerous features, some of them detailed below.
+
+1. Creation of entities 
+    _ Actors
+        _ Monsters, Heros, PCs, Boss, etc.
+    _ Items 
+        _ Armors, weapons, shields, artifacts, etc.
 2. A damage system that can interact with resistance and vulnerabilities of actors.
 3. A logger than can detail actions taken during a fight to see what happened.
 4. A Strategy class, that details how an actor takes their actions.
-5. A theater of the mind approach where no grid is required.
+5. A Targeting class, that details how an actor preferentially selects their targets.
+6. A theater of the mind approach where no grid is required.
+7. The beginning of a Spell system, with concentration and spell duration being handled.
 
 # Installation
 Clone the repository:
@@ -23,7 +32,7 @@ Add the library to your python path (system dependent)
 
 # Basic usage
 
-```
+```python
 import pyTTRPGsimulator as rpg
 
 # Create a basic sword
@@ -49,7 +58,7 @@ print(combat_manager.fight_debrief())
 
 # Advanced usage
 
-```
+```python
 import pyTTRPGsimulator as rpg
 
 # Create a complex magic item
@@ -85,6 +94,7 @@ See tutorials in the *tests* folder for more examples on how to run combats and 
 The code is far from being perfect, and currently has many limitations that I will be working on, with your help (see the How to Contribute section below).
 
 1. The code is tailored for fights between "sword and board" characters, without really accounting for range weapons or spells during combat (even though range weapons and spells are implemented within the code already).
+    _ Spells can be cast before combat (accounts for concentration and spell duration)
 2. Reactions are not implemented yet. A "Trigger" class should be created to handle more generally the case when things happen upon certain events.
 3. An extension of the theater of the mind system to account for positioning would be a great addition to the gaming aspect of the simulator.
 4. Examples and tutorials are still sparse.

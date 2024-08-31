@@ -208,6 +208,10 @@ class CombatManager:
         Returns:
             tuple: A tuple containing the number of rounds, number of turns, the winning team, and remaining health points.
         """
+        logger.info(f"")
+        logger.info(f"###############")
+        logger.info(f"Fight begins !")
+        logger.info(f"###############")
         if not self.has_initiative:
             self.roll_initiative()
 
@@ -216,7 +220,9 @@ class CombatManager:
             self.run_round()
 
         logger.info(f"")
+        logger.info(f"###############")
         logger.info(f"Fight is over !")
+        logger.info(f"###############")
 
         winning_team = "A" if any(actor.is_alive for actor in self.team_a) else "B"
         remaining_hp = {

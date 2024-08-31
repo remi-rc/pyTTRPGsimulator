@@ -26,6 +26,20 @@ def setup_logging(level=logging.INFO, log_filename="game_logs.log"):
         logger.addHandler(ch)
         logger.addHandler(fh)
 
+    logger.info(
+        f"#############################################################################################"
+    )
+    logger.info(
+        f"Welcome to pyTTRPG simulator, a code created by Remi Necnor for the best TTRPG in the world !"
+    )
+    logger.info(f"Stay tuned on github at https://github.com/remi-rc/pyTTRPGsimulator")
+    logger.info(f"Contact: remi.necnor@gmail.com")
+    logger.info(f"Discord: remi_rc")
+    logger.info(f"Have fun !")
+    logger.info(
+        f"#############################################################################################"
+    )
+
     return logger
 
 
